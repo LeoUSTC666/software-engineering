@@ -1,6 +1,42 @@
+<!--
+ * @Descripttion: 
+ * @version: 
+ * @Author: Leo
+ * @Date: 2024-11-29 17:20:10
+ * @LastEditors: Leo
+ * @LastEditTime: 2024-12-01 18:47:35
+-->
 <!DOCTYPE html>
 <html>
 <head>
     <title>学生主页</title>
+    <script>
+        function decodeEmoji(emojiCode) {
+            return String.fromCodePoint(parseInt(emojiCode.replace('U+', '0x')));
+        }
+
+        function displayEmojis() {
+            const emojiElements = document.querySelectorAll('.emoji-code');
+            emojiElements.forEach(element => {
+                const emojiCode = element.textContent;
+                element.textContent = decodeEmoji(emojiCode);
+            });
+        }
+
+        window.onload = displayEmojis;
+    </script>
 </head>
+<body>
+    <h1>Welcome, {{ username }}!</h1>
+    {% if stu_evalution %}
+        <h2>你的评价:</h2>
+        <ul>
+        {% for eval in stu_evalution %}
+            <li>Class ID: {{ eval[2] }}, Emoji: <span class="emoji-code">{{ eval[3] }}</span>, Date: {{ eval[4] }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>没有找到评价记录。</p>
+    {% endif %}
+</body>
 </html>

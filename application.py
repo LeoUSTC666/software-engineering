@@ -4,10 +4,11 @@ version:
 Author: Leo
 Date: 2024-11-29 17:00:10
 LastEditors: Leo
-LastEditTime: 2024-11-30 18:15:54
+LastEditTime: 2024-12-01 18:04:22
 '''
 from datetime import datetime
 from flask import Flask, request, render_template, url_for, redirect
+from sql_src.func import search_student_evalution, validate_student_login
 
 import pymysql
 import os
@@ -33,13 +34,9 @@ def student_login():
     if request.method == 'POST':
         student_id = request.form['student_id']
         password = request.form['password']
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM USER_STUDENT WHERE STUDENT_ID = %s AND STUDENT_PASSWORD = %s', (student_id, password))
-        user = cursor.fetchone()
-        cursor.close()
+        user = validate_student_login(student_id, password)
         if user:
-            user = User(user[0], user[1], user[2])
-            return redirect(url_for('student_home', username=user.username))
+            return redirect(url_for('student_home', username=user[1], stu_id=student_id))
         else:
             return render_template('student_login.html', error='Invalid username or password')
     return render_template('student_login.html')
@@ -47,7 +44,13 @@ def student_login():
 @app.route('/student_home')
 def student_home():
     username = request.args.get('username')
-    return f"Welcome, {username}!"
+    stu_id = request.args.get('stu_id')
+    stu_evalution = None
+    if stu_id:
+        print(1)
+        stu_evalution = search_student_evalution(stu_id)
+        print(stu_evalution)
+    return render_template('student_home.html', username=username, stu_evalution=stu_evalution)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
