@@ -4,8 +4,9 @@ version:
 Author: Leo
 Date: 2024-11-30 19:15:18
 LastEditors: Leo
-LastEditTime: 2024-12-01 18:03:14
+LastEditTime: 2024-12-02 14:59:40
 '''
+from datetime import datetime
 import pymysql
 
 def get_db_connection():
@@ -22,7 +23,13 @@ def search_student_evalution(student_id):
         return None
     try:
         cursor = conn.cursor()
-        sql = "SELECT * FROM evalution WHERE student_id = %s"
+        sql = """
+        SELECT e.EVALUTION_ID, e.STUDENT_ID, c.CLASS_NAME, t.TEACHER_NAME, e.EMOJI_CODE, e.EVALUTION_DATE
+        FROM EVALUTION e
+        JOIN CLASS_INFO c ON e.CLASS_ID = c.CLASS_ID
+        JOIN USER_TEACHER t ON c.CLASS_TEACHER_ID = t.TEACHER_ID
+        WHERE e.STUDENT_ID = %s
+        """
         cursor.execute(sql, (student_id,))
         result = cursor.fetchall()
         cursor.close()
@@ -32,14 +39,36 @@ def search_student_evalution(student_id):
         print(f"Error executing query: {e}")
         return None
 
-def delete_student_evalution(student_id, class_id, emoji_id):
+def search_student_class(student_id):
     conn = get_db_connection()
     if conn is None:
         return None
     try:
         cursor = conn.cursor()
-        sql = "DELETE FROM evalution WHERE student_id = %s and class_id = %s and emoji_id = %s"
-        cursor.execute(sql, (student_id, class_id, emoji_id))
+        sql = """
+        SELECT c.CLASS_ID, c.CLASS_NAME, t.TEACHER_NAME
+        FROM CLASS_INFO c
+        JOIN USER_TEACHER t ON c.CLASS_TEACHER_ID = t.TEACHER_ID
+        JOIN CLASS_STUDENT sc ON c.CLASS_ID = sc.CLASS_ID
+        WHERE sc.STUDENT_ID = %s
+        """
+        cursor.execute(sql, (student_id,))
+        result = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return result
+    except pymysql.MySQLError as e:
+        print(f"Error executing query: {e}")
+        return None
+    
+def insert_student_evalution(student_id, class_id, emoji_code):
+    conn = get_db_connection()
+    if conn is None:
+        return None
+    try:
+        cursor = conn.cursor()
+        sql = "INSERT INTO evalution (student_id, class_id, emoji_code, evalution_date) VALUES (%s, %s, %s, datetime)"
+        cursor.execute(sql, (student_id, class_id, emoji_code))
         conn.commit()
         cursor.close()
         conn.close()

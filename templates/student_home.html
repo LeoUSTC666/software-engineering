@@ -23,6 +23,38 @@
             });
         }
 
+        function showEmojiPicker(classId) {
+            const picker = document.getElementById(`emoji-picker-${classId}`);
+            picker.style.display = 'block';
+        }
+
+        function selectEmoji(classId, emojiCode) {
+            const selectedEmoji = document.getElementById(`selected-emoji-${classId}`);
+            selectedEmoji.textContent = decodeEmoji(emojiCode);
+            selectedEmoji.dataset.emojiCode = emojiCode;
+            const submitButton = document.getElementById(`submit-button-${classId}`);
+            submitButton.style.display = 'inline';
+        }
+
+        function submitEmoji(studentId, classId) {
+            const selectedEmoji = document.getElementById(`selected-emoji-${classId}`);
+            const emojiCode = selectedEmoji.dataset.emojiCode;
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/submit_emoji', true);
+            xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    alert('评价已提交');
+                    location.reload();
+                }
+            };
+            xhr.send(JSON.stringify({
+                student_id: studentId,
+                class_id: classId,
+                emoji_code: emojiCode
+            }));
+        }
+        
         window.onload = displayEmojis;
     </script>
 </head>
@@ -32,11 +64,31 @@
         <h2>你的评价:</h2>
         <ul>
         {% for eval in stu_evalution %}
-            <li>Class ID: {{ eval[2] }}, Emoji: <span class="emoji-code">{{ eval[3] }}</span>, Date: {{ eval[4] }}</li>
+            <li>Evalution ID: {{eval[0]}}, Class Name: {{ eval[2] }}, Teacher Name: {{ eval[3] }}, Emoji: <span class="emoji-code">{{ eval[4] }}</span>, Date: {{ eval[5] }}</li>
         {% endfor %}
         </ul>
     {% else %}
         <p>没有找到评价记录。</p>
+    {% endif %}
+    {% if stu_class %}
+        <h2>你的课程:</h2>
+        <ul>
+        {% for cls in stu_class %}
+            <li>
+                Class ID: {{ cls[0] }},Class Name: {{ cls[1] }}, Teacher: {{ cls[2] }}
+                <button onclick="showEmojiPicker({{ cls[0] }})">评价</button>
+                <div id="emoji-picker-{{ cls[0] }}" style="display: none;">
+                    <button onclick="selectEmoji({{ cls[0] }}, 'U+1F600')">😀</button>
+                    <button onclick="selectEmoji({{ cls[0] }}, 'U+1F603')">😃</button>
+                    <button onclick="selectEmoji({{ cls[0] }}, 'U+1F60D')">😍</button>
+                    <span id="selected-emoji-{{ cls[0] }}" data-emoji-code=""></span>
+                    <button id="submit-button-{{ cls[0] }}" style="display: none;" onclick="submitEmoji({{ stu_id }}, {{ cls[0] }})">提交</button>
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>没有找到课程记录。</p>
     {% endif %}
 </body>
 </html>

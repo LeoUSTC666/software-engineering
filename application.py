@@ -4,11 +4,11 @@ version:
 Author: Leo
 Date: 2024-11-29 17:00:10
 LastEditors: Leo
-LastEditTime: 2024-12-01 18:04:22
+LastEditTime: 2024-12-02 14:56:03
 '''
 from datetime import datetime
-from flask import Flask, request, render_template, url_for, redirect
-from sql_src.func import search_student_evalution, validate_student_login
+from flask import Flask, request, render_template, url_for, redirect, jsonify
+from sql_src.func import search_student_evalution, validate_student_login, search_student_class, insert_student_evalution
 
 import pymysql
 import os
@@ -46,11 +46,27 @@ def student_home():
     username = request.args.get('username')
     stu_id = request.args.get('stu_id')
     stu_evalution = None
+    stu_class = None
     if stu_id:
         print(1)
         stu_evalution = search_student_evalution(stu_id)
-        print(stu_evalution)
-    return render_template('student_home.html', username=username, stu_evalution=stu_evalution)
+        print("stu_evalution:", stu_evalution)
+        stu_class = search_student_class(stu_id)
+        print("stu_class:", stu_class)
+    return render_template('student_home.html', username=username, stu_evalution=stu_evalution, stu_class=stu_class)
+
+@app.route('/submit_emoji', methods=['POST'])
+def submit_emoji():
+    data = request.get_json()
+    print(99)
+    student_id = data['student_id']
+    class_id = data['class_id']
+    emoji_code = data['emoji_code']
+    success = insert_student_evalution(student_id, class_id, emoji_code)
+    if success:
+        return jsonify({'message': '评价已提交'}), 200
+    else:
+        return jsonify({'message': '提交失败'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
