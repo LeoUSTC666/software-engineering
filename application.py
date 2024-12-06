@@ -8,7 +8,7 @@ LastEditTime: 2024-12-02 14:56:03
 '''
 from datetime import datetime
 from flask import Flask, request, render_template, url_for, redirect, jsonify
-from sql_src.func import search_student_evalution, validate_student_login, search_student_class, insert_student_evalution
+from sql_src.func import search_student_evalution, validate_student_login, search_student_class, insert_student_evalution,delete_student_evalution
 
 import pymysql
 import os
@@ -70,6 +70,16 @@ def submit_emoji():
         return jsonify({'message': '评价已提交'}), 200
     else:
         return jsonify({'message': '提交失败'}), 500
+    
+@app.route('/delete_evalution', methods=['POST'])
+def delete_evalution():
+    data = request.get_json()
+    evalution_id = data['evalution_id']
+    success = delete_student_evalution(evalution_id)
+    if success:
+        return jsonify({'message': '评价已删除'}), 200
+    else:
+        return jsonify({'message': '删除失败'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

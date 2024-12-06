@@ -4,7 +4,7 @@
  * @Author: Leo
  * @Date: 2024-11-29 17:20:10
  * @LastEditors: Leo
- * @LastEditTime: 2024-12-06 17:06:04
+ * @LastEditTime: 2024-12-06 18:02:26
 -->
 <!DOCTYPE html>
 <html>
@@ -70,6 +70,29 @@
                 emoji_code: emojiCode
             }));
         }
+        function deleteEvalution(evalution_id) {
+            const xhr = new XMLHttpRequest();
+            console.log('Initializing request...');
+            xhr.open('POST', '/delete_evalution', true);
+            xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    console.log('Request completed with status:', xhr.status);
+                    if (xhr.status === 200) {
+                        alert('评价已删除');
+                        location.reload();
+                    } else {
+                        alert('删除失败');
+                    }
+                }
+            };
+            console.log('Sending request with data:', {
+                evalution_id: evalution_id
+            });
+            xhr.send(JSON.stringify({
+                evalution_id: evalution_id
+            }));
+        }
 
         window.onload = function() {
             displayEmojis();
@@ -98,6 +121,14 @@
                     hideEmojiPicker(classId);
                 });
             });
+
+            const deleteButtons = document.querySelectorAll('.delete-button');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const evalutionId = this.dataset.evalutionId;
+                    deleteEvalution(evalutionId);
+                });
+            });
         };
     </script>
 </head>
@@ -107,7 +138,10 @@
         <h2>你的评价:</h2>
         <ul>
         {% for eval in stu_evalution %}
-            <li>Evalution ID: {{eval[0]}}, Class Name: {{ eval[2] }}, Teacher Name: {{ eval[3] }}, Emoji: <span class="emoji-code">{{ eval[4] }}</span>, Date: {{ eval[5] }}</li>
+            <li>
+                Evalution ID: {{eval[0]}}, Class Name: {{ eval[2] }}, Teacher Name: {{ eval[3] }}, Emoji: <span class="emoji-code">{{ eval[4] }}</span>, Date: {{ eval[5] }}
+                <button class="delete-button" data-evalution-id="{{ eval[0] }}">删除</button>
+            </li>
         {% endfor %}
         </ul>
     {% else %}
@@ -124,6 +158,20 @@
                     <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F600">😀</button>
                     <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F603">😃</button>
                     <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F60D">😍</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F604">😄</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F601">😁</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F606">😆</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F605">😅</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F923">🤣</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F602">😂</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F642">🙂</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F643">🙃</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F609">😉</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F60A">😊</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F607">😇</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F970">🥰</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F4A9">💩</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F921">🤡</button>
                     <span id="selected-emoji-{{ cls[0] }}" data-emoji-code=""></span>
                     <button class="submit-button" id="submit-button-{{ cls[0] }}" style="display: none;" data-student-id="{{ stu_id }}" data-class-id="{{ cls[0] }}">提交</button>
                     <button class="cancel-button" data-class-id="{{ cls[0] }}">取消</button>

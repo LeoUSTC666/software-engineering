@@ -95,3 +95,20 @@ def validate_student_login(student_id, password):
     except pymysql.MySQLError as e:
         print(f"Error executing query: {e}")
         return None
+    
+def delete_student_evalution(evalution_id):
+    conn = get_db_connection()
+    if conn is None:
+        return None
+    try:
+        cursor = conn.cursor()
+        sql = "DELETE FROM evalution WHERE evalution_id = %s"
+        cursor.execute(sql, (evalution_id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except pymysql.MySQLError as e:
+        print(f"Error executing query: {e}")
+        return None
+    
