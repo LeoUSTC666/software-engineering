@@ -17,7 +17,7 @@ pymysql.install_as_MySQLdb()
 
 app = Flask(__name__)
 
-conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='leo520', db='lab2', charset='utf8')
+# conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='leo520', db='lab2', charset='utf8')
 
 class User:
     def __init__(self, id, username, password):
@@ -53,7 +53,7 @@ def student_home():
         print("stu_evalution:", stu_evalution)
         stu_class = search_student_class(stu_id)
         print("stu_class:", stu_class)
-    return render_template('student_home.html', username=username, stu_evalution=stu_evalution, stu_class=stu_class)
+    return render_template('student_home.html', stu_id = stu_id, username=username, stu_evalution=stu_evalution, stu_class=stu_class)
 
 @app.route('/submit_emoji', methods=['POST'])
 def submit_emoji():
@@ -62,6 +62,9 @@ def submit_emoji():
     student_id = data['student_id']
     class_id = data['class_id']
     emoji_code = data['emoji_code']
+    print("student_id:", student_id)
+    print("class_id:", class_id)
+    print("emoji_code:", emoji_code)
     success = insert_student_evalution(student_id, class_id, emoji_code)
     if success:
         return jsonify({'message': '评价已提交'}), 200

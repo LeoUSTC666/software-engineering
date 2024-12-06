@@ -4,7 +4,7 @@ version:
 Author: Leo
 Date: 2024-11-30 19:15:18
 LastEditors: Leo
-LastEditTime: 2024-12-02 14:59:40
+LastEditTime: 2024-12-06 17:13:11
 '''
 from datetime import datetime
 import pymysql
@@ -67,8 +67,8 @@ def insert_student_evalution(student_id, class_id, emoji_code):
         return None
     try:
         cursor = conn.cursor()
-        sql = "INSERT INTO evalution (student_id, class_id, emoji_code, evalution_date) VALUES (%s, %s, %s, datetime)"
-        cursor.execute(sql, (student_id, class_id, emoji_code))
+        sql = "INSERT INTO evalution (student_id, class_id, emoji_code, evalution_date) VALUES (%s, %s, %s, %s)"
+        cursor.execute(sql, (student_id, class_id, emoji_code,datetime.now()))
         conn.commit()
         cursor.close()
         conn.close()
