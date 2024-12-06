@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>教师主页</title>
+    <script>
+        function decodeEmoji(emojiCode) {
+            return String.fromCodePoint(parseInt(emojiCode.replace('U+', '0x')));
+        }
+
+        function displayEmojis() {
+            const emojiElements = document.querySelectorAll('.emoji-code');
+            emojiElements.forEach(element => {
+                const emojiCode = element.textContent;
+                element.textContent = decodeEmoji(emojiCode);
+            });
+        }
+        window.onload = displayEmojis;
+    </script>
+</head>
+<body>
+    <h1>Welcome, {{ username }}!</h1>
+    {% if teacher_evalution %}
+        <h2>你的课程评价:</h2>
+        {%for eval in teacher_evalution%}
+            <h3>课程名称:  {{eval[0]}}</h3>
+            {%for data in eval[1]%}
+                <li>Emoji: <span class="emoji-code">{{ data[0] }}</span>, Count: {{ data[1] }}</li>
+            {%endfor%}
+        {% endfor %}
+    {% else %}
+        <p>没有找到评价记录。</p>
+    {% endif %}
+</body>

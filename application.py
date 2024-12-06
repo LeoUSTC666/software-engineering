@@ -4,11 +4,11 @@ version:
 Author: Leo
 Date: 2024-11-29 17:00:10
 LastEditors: Leo
-LastEditTime: 2024-12-02 14:56:03
+LastEditTime: 2024-12-06 23:40:42
 '''
 from datetime import datetime
 from flask import Flask, request, render_template, url_for, redirect, jsonify
-from sql_src.func import search_student_evalution, validate_student_login, search_student_class, insert_student_evalution,delete_student_evalution
+from sql_src.func import search_student_evalution, validate_student_login, search_student_class, insert_student_evalution,delete_student_evalution, validate_teacher_login,search_teacher_evalution
 
 import pymysql
 import os
@@ -28,6 +28,46 @@ class User:
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/teacher_login',methods = ['GET', 'POST'])
+def teacher_login():
+    if request.method == 'POST':
+        teacher_id = request.form['teacher_id']
+        password = request.form['password']
+        user = validate_teacher_login(teacher_id, password)
+        if user:
+            return redirect(url_for('teacher_home', username=user[1], teacher_id=teacher_id))
+        else:
+            return render_template('teacher_login.html', error='Invalid userid or password')
+    return render_template('teacher_login.html')
+
+@app.route('/teacher_home')
+def teacher_home():
+    username = request.args.get('username')
+    teacher_id = request.args.get('teacher_id')
+    curr_evalution = []
+    teacher_evalution = []
+    current_class = None
+    if teacher_id:
+        print(1)
+        raw_teacher_evalution = search_teacher_evalution(teacher_id)
+        print("raw_teacher_evalution:", raw_teacher_evalution)
+        for eval in raw_teacher_evalution:
+            if eval[0] == current_class:
+                curr_evalution.append((eval[1], eval[2]))
+                print("curr_evalution:", curr_evalution)
+            else:
+                if current_class is None: # 初始化第一个
+                    current_class = eval[0]
+                else:
+                    teacher_evalution.append((current_class, curr_evalution))
+                    current_class = eval[0]
+                    curr_evalution = [] # 清空
+                curr_evalution.append((eval[1], eval[2]))
+        if current_class is not None:
+            teacher_evalution.append((current_class, curr_evalution))
+        print("teacher_evalution:", teacher_evalution)
+    return render_template('teacher_home.html', teacher_id = teacher_id, username=username, teacher_evalution=teacher_evalution)
 
 @app.route('/student_login', methods=['GET', 'POST'])
 def student_login():
