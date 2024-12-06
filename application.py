@@ -4,11 +4,11 @@ version:
 Author: Leo
 Date: 2024-11-29 17:00:10
 LastEditors: Leo
-LastEditTime: 2024-12-06 23:40:42
+LastEditTime: 2024-12-07 00:18:39
 '''
 from datetime import datetime
 from flask import Flask, request, render_template, url_for, redirect, jsonify
-from sql_src.func import search_student_evalution, validate_student_login, search_student_class, insert_student_evalution,delete_student_evalution, validate_teacher_login,search_teacher_evalution
+from sql_src.func import search_student_evalution, validate_student_login, search_student_class, insert_student_evalution,delete_student_evalution, validate_teacher_login,search_teacher_evalution,search_all_teacher_evalution,validate_admin_login
 
 import pymysql
 import os
@@ -28,6 +28,25 @@ class User:
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/admin_login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        admin_id = request.form['admin_id']
+        password = request.form['password']
+        user = validate_admin_login(admin_id, password)
+        if user:
+            print(1)
+            return redirect(url_for('admin_home'))
+        else:
+            return render_template('admin_login.html', error='Invalid admin_id or password')
+    return render_template('admin_login.html')
+
+@app.route('/admin_home')
+def admin_home():
+    all_teacher_evalution = search_all_teacher_evalution()
+    print("all_teacher_evalution:", all_teacher_evalution)
+    return render_template('admin_home.html',all_teacher_evalution=all_teacher_evalution)
 
 @app.route('/teacher_login',methods = ['GET', 'POST'])
 def teacher_login():

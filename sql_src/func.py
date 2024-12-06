@@ -62,7 +62,29 @@ def search_teacher_evalution(teacher_id):
     except pymysql.MySQLError as e:
         print(f"Error executing query: {e}")
         return None
-
+    
+def search_all_teacher_evalution():
+    conn = get_db_connection()
+    if conn is None:
+        return None
+    try:
+        cursor = conn.cursor()
+        sql = """
+        SELECT t.TEACHER_NAME, c.CLASS_NAME, e.EMOJI_CODE, COUNT(e.EMOJI_CODE) as emoji_count
+        FROM EVALUTION e
+        JOIN CLASS_INFO c ON e.CLASS_ID = c.CLASS_ID
+        JOIN USER_TEACHER t ON c.CLASS_TEACHER_ID = t.TEACHER_ID
+        GROUP BY t.TEACHER_NAME, c.CLASS_NAME, e.EMOJI_CODE
+        ORDER BY t.TEACHER_NAME, c.CLASS_NAME
+        """
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return result
+    except pymysql.MySQLError as e:
+        print(f"Error executing query: {e}")
+        return None
 
 def search_student_class(student_id):
     conn = get_db_connection()
@@ -161,6 +183,25 @@ def  validate_teacher_login(teacher_id, password):
         print(f"Error executing query: {e}")
         return None
     
+def validate_admin_login(admin_id, password):
+    conn = get_db_connection()
+    if conn is None:
+        return None
+    try:
+        cursor = conn.cursor()
+        sql = "SELECT * FROM USER_ADMIN WHERE ADMIN_ID = %s AND ADMIN_PASSWORD = %s"
+        cursor.execute(sql, (admin_id, password))
+        user = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if user:
+            return user
+        else:
+            return None
+    except pymysql.MySQLError as e:
+        print(f"Error executing query: {e}")
+        return None
+
 def delete_student_evalution(evalution_id):
     conn = get_db_connection()
     if conn is None:

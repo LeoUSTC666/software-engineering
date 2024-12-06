@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>管理员登录</title>
+</head>
+<body>
+    <form method="post">
+        <label for="admin_id">请输入帐号和密码:</label>
+        <input type="number" id="admin_id" name="admin_id" required>
+        <input type="number" id="password" name="password" required>
+        <input type="submit" value="登录">
+    </form>
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+</body>
+</html>
