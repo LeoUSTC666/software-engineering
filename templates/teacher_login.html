@@ -1,17 +1,93 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>教师登录</title>
-</head>
-<body>
-    <form method="post">
-        <label for="teacher_id">请输入工号和密码:</label>
-        <input type="number" id="teacher_id" name="teacher_id" required>
-        <input type="number" id="password" name="password" required>
-        <input type="submit" value="登录">
-    </form>
-    {% if error %}
-        <p style="color: red;">{{ error }}</p>
-    {% endif %}
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>教师登录</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f5f5f5;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }
+            .login-container {
+                background-color: #fff;
+                padding: 20px 30px;
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                text-align: center;
+                width: 300px;
+            }
+            .login-container img {
+                width: 100px;
+                height: auto;
+                margin-bottom: 20px;
+            }
+            .login-container h1 {
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+            .login-container label {
+                display: block;
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+            .login-container input[type="number"] {
+                width: calc(100% - 20px);
+                padding: 10px;
+                margin-bottom: 15px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+            }
+            .login-container input[type="submit"] {
+                width: calc(100% - 20px);
+                padding: 10px;
+                background-color: #4CAF50;
+                color: white;
+                border-radius: 5px;
+                border: none;
+                cursor: pointer;
+            }
+            .login-container input[type="submit"]:hover {
+                background-color: #45a049;
+            }
+            .error-message {
+                color: red;
+                font-size: 14px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="login-container">
+            <!-- 添加一个图片作为标志 -->
+            <img src="teacher_icon.png" alt="教师登录图标">
+    
+            <!-- 页面标题 -->
+            <h1>教师登录</h1>
+    
+            <!-- 登录表单 -->
+            <form method="post">
+                <label for="teacher_id">请输入工号和密码:</label>
+    
+                <!-- 工号输入框 -->
+                <input type="number" id="teacher_id" name="teacher_id" placeholder="请输入工号" required>
+    
+                <!-- 密码输入框 -->
+                <input type="number" id="password" name="password" placeholder="请输入密码" required>
+    
+                <!-- 提交按钮 -->
+                <input type="submit" value="登录">
+            </form>
+    
+            <!-- 错误提示信息 -->
+            {% if error %}
+            <p class="error-message">{{ error }}</p>
+            {% endif %}
+        </div>
+    </body>
 </html>
