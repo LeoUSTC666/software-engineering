@@ -120,6 +120,15 @@ BEGIN
 END //
 DELIMITER ;
 
+drop table if exists images;
+CREATE TABLE images 
+(
+	TEACHER_ID            int(20)                       not null,
+	image_path VARCHAR(255)
+);
+
+INSERT INTO `images` (`TEACHER_ID`, `image_path`) VALUES ('1', '../static/images/1707496853306.jpg');
+
 DROP EVENT IF EXISTS `RESET_TABLE_CHANGE_LOG`;
 CREATE EVENT RESET_TABLE_CHANGE_LOG 
 ON SCHEDULE EVERY 10 SECOND

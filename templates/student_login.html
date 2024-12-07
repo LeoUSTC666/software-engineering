@@ -9,65 +9,74 @@
 <!-- elder_login.html -->
 <!DOCTYPE html>
 <html lang="zh">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>学生登录</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .login-container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 300px;
-        }
-        .login-container h1 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        .form-group input {
-            width: 90%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .error-message {
-            color: red;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>学生登录</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f5f5f5;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+            }
+            .login-container {
+                background-color: #fff;
+                padding: 20px 30px;
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                text-align: center;
+                width: 350px;
+            }
+            .login-container img {
+                width: 100px;
+                height: auto;
+                margin-bottom: 20px;
+            }
+            .login-container h1 {
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+            .form-group {
+                margin-bottom: 15px;
+            }
+            .form-group label {
+                display: block;
+                font-size: 14px;
+                margin-bottom: 5px;
+            }
+            .form-group input {
+                width: calc(100% - 20px);
+                padding: 10px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+            }
+            .error-message {
+                color: red;
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+            button {
+                width: calc(100% - 20px);
+                padding: 10px;
+                background-color: #4CAF50;
+                color: white;
+                border-radius: 5px;
+                border: none;
+                cursor: pointer;
+            }
+            button:hover {
+                background-color: #45a049;
+            }
+        </style>
+    </head>
 <body>
     <div class="login-container">
+        <!-- 添加一个图片作为标志 -->
+        <img src="student_icon.png" alt="学生登录图标">
         <h1>学生登录</h1>
         <form method="POST" action="/student_login" onsubmit="return validateForm()">
             {% if error %}

@@ -1,43 +1,126 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>教师主页</title>
-    <script>
-        function decodeEmoji(emojiCode) {
-            return String.fromCodePoint(parseInt(emojiCode.replace('U+', '0x')));
-        }
-
-        function displayEmojis() {
-            const emojiElements = document.querySelectorAll('.emoji-code');
-            emojiElements.forEach(element => {
-                const emojiCode = element.textContent;
-                element.textContent = decodeEmoji(emojiCode);
-            });
-        }
-        window.onload = displayEmojis;
-    </script>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>教师主页</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f5f5f5;
+            }
+            header {
+                background-color: #4CAF50;
+                color: white;
+                padding: 20px 0;
+                text-align: center;
+            }
+            header h1 {
+                margin: 0;
+                font-size: 2.5em;
+            }
+            .container {
+                max-width: 800px;
+                margin: 30px auto;
+                padding: 20px;
+                background-color: #fff;
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+            .course-section {
+                margin-bottom: 30px;
+            }
+            .course-section h3 {
+                color: #4CAF50;
+            }
+            .course-section ul {
+                list-style-type: none;
+                padding-left: 0;
+            }
+            .course-section li {
+                padding: 10px;
+                border-bottom: 1px solid #ddd;
+            }
+            .course-section li:last-child {
+                border-bottom: none;
+            }
+            footer {
+                background-color: #333;
+                color: white;
+                text-align: center;
+                padding: 15px 0;
+            }
+            footer p {
+                margin: 0;
+            }
+            .image-container img {
+                width: 100%;
+                max-width: 600px;
+                height: auto;
+                border-radius: 10px;
+            }
+        </style>
+        <script>
+            // Decode emoji codes to display actual emojis
+            function decodeEmoji(emojiCode) {
+                return String.fromCodePoint(parseInt(emojiCode.replace('U+', '0x')));
+            }
+    
+            // Replace emoji codes with actual emojis on page load
+            function displayEmojis() {
+                const emojiElements = document.querySelectorAll('.emoji-code');
+                emojiElements.forEach(element => {
+                    const emojiCode = element.textContent.trim();
+                    element.textContent = decodeEmoji(emojiCode);
+                });
+            }
+    
+            // Execute displayEmojis function on page load
+            window.onload = displayEmojis;
+        </script>
+    </head>
 <body>
+    <!-- 页眉 -->
+    <header>
+        <h1>欢迎, {{ username }}!</h1>
+    </header>
     <!--此处展示一个图片,已获取一个绝对地址存储在image_path -->
-    <div class="centered-content">
-      <img src="{{image_path}}" alt="个人头像" width="200" height="200">
-    <!--此处加入一个跳转至上传图片的按钮 -->
-    <form action="/upload" method="post" enctype=multipart/form-data>
-        <input type="hidden" name="teacher_id" value="{{teacher_id}}">
-        <input type="hidden" name="username" value="{{username}}">
-        <input type=file name=image>
-        <input type=submit value=上传>
-    </form>
-    <h1>Welcome, {{ username }}!</h1>
-    {% if teacher_evalution %}
-        <h2>你的课程评价:</h2>
-        {%for eval in teacher_evalution%}
-            <h3>课程名称:  {{eval[0]}}</h3>
-            {%for data in eval[1]%}
-                <li>Emoji: <span class="emoji-code">{{ data[0] }}</span>, Count: {{ data[1] }}</li>
-            {%endfor%}
-        {% endfor %}
-    {% else %}
-        <p>没有找到评价记录。</p>
-    {% endif %}
+    <div class="container">
+        <!-- 添加一张图片作为视觉吸引 -->
+        <h2>个人头像</h2>
+        <img src="{{image_path}}" alt="个人头像" width="200" height="200">
+        <!--此处加入一个跳转至上传图片的按钮 -->
+        <form action="/upload" method="post" enctype=multipart/form-data>
+            <input type="hidden" name="teacher_id" value="{{teacher_id}}">
+            <input type="hidden" name="username" value="{{username}}">
+            <input type=file name=image>
+            <input type=submit value=上传>
+        </form>
+        {% if teacher_evalution %}
+            <h2>你的课程评价:</h2>
+            {%for eval in teacher_evalution%}
+            <div class="course-section">
+            
+                <!-- 显示课程名称 -->
+                <h3>课程名称：{{ eval[0] }}</h3>
+                
+                <!-- 显示课程评价 -->
+                <ul>
+                    {% for data in eval[1] %}
+                    <li>Emoji：<span class="emoji-code">{{ data[0] }}</span>, 数量：{{ data[1] }}</li>
+                    {% endfor %}
+                </ul>
+            
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>没有找到评价记录。</p>
+        {% endif %}
+    </div>
+    <!-- 页脚 -->
+    <footer>
+        <p>&copy; 2024 教师评估平台 | 提升教学质量，共建和谐课堂</p>
+    </footer>
 </body>

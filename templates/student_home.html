@@ -7,21 +7,42 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
         }
-        h1, h2 {
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px 0;
             text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #333;
         }
         ul {
             list-style-type: none;
-            padding: 0;
+            padding-left: 0;
         }
         li {
             margin-bottom: 15px;
             padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #f9f9f9;
+            border-bottom: 1px solid #ddd;
+        }
+        li:last-child {
+            border-bottom: none;
         }
         .emoji-picker {
             margin-top: 10px;
@@ -44,6 +65,15 @@
         .cancel-button {
             background-color: #f0ad4e;
             color: white;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+        }
+        footer p {
+            margin: 0;
         }
     </style>
     <script>
@@ -167,57 +197,65 @@
     </script>
 </head>
 <body>
-    <h1>Welcome, {{ username }}!</h1>
+    <!-- 页眉 -->
+    <header>
+        <h1>欢迎, {{ username }}!</h1>
+    </header>
+    <div class="container">
+        {% if stu_evalution %}
+        <h2>你的评价:</h2>
+        <ul>
+        {% for eval in stu_evalution %}
+            <li>
+               Evalution ID: {{ eval[0] }}, Class Name: {{ eval[2] }}, Teacher Name: {{ eval[3] }}, Emoji:
+               <span class="emoji-code">{{ eval[4] }}</span>, Date: {{ eval[5] }}
+               <button class="delete-button" data-evalution-id="{{ eval[0] }}">删除</button>
+           </li>
+        {% endfor %}
+        </ul>
+        {% else %}
+        <p>没有找到评价记录。</p>
+        {% endif %}
 
-    {% if stu_evalution %}
-    <h2>你的评价:</h2>
-    <ul>
-    {% for eval in stu_evalution %}
-        <li>
-           Evalution ID: {{ eval[0] }}, Class Name: {{ eval[2] }}, Teacher Name: {{ eval[3] }}, Emoji:
-           <span class="emoji-code">{{ eval[4] }}</span>, Date: {{ eval[5] }}
-           <button class="delete-button" data-evalution-id="{{ eval[0] }}">删除</button>
-       </li>
-    {% endfor %}
-    </ul>
-    {% else %}
-    <p>没有找到评价记录。</p>
-    {% endif %}
-
-    {% if stu_class %}
-    <h2>你的课程:</h2>
-    <ul>
-        {% for cls in stu_class %}
-        <li>
-            Class ID: {{ cls[0] }}, Class Name: {{ cls[1] }}, Teacher: {{ cls[2] }}
-            <button onclick="showEmojiPicker({{ cls[0] }})">评价</button>
-            <div id="emoji-picker-{{ cls[0] }}" style="display: none;">
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F600">😀</button>
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F603">😃</button>
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F60D">😍</button>
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F604">😄</button>
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F601">😁</button>
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F606">😆</button>
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F605">😅</button>
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F923">🤣</button>
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F602">😂</button>
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F642">🙂</button>
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F643">🙃</button>
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F609">😉</button>
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F60A">😊</button>
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F607">😇</button>
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F970">🥰</button>
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F4A9">💩</button>
-                <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F921">🤡</button>
-                <span id="selected-emoji-{{ cls[0] }}" data-emoji-code=""></span>
-                <button class="submit-button" id="submit-button-{{ cls[0] }}" style="display: none;" data-student-id="{{ stu_id }}" data-class-id="{{ cls[0] }}">提交</button>
-                <button class="cancel-button" data-class-id="{{ cls[0] }}">取消</button>
-            </div>
-        </li>
-    {% endfor %}
-    </ul>
-    {% else %}
-    <p>没有找到课程记录。</p>
-    {% endif %}
+        {% if stu_class %}
+        <h2>你的课程:</h2>
+        <ul>
+            {% for cls in stu_class %}
+            <li>
+                Class ID: {{ cls[0] }}, Class Name: {{ cls[1] }}, Teacher: {{ cls[2] }}
+                <button onclick="showEmojiPicker({{ cls[0] }})">评价</button>
+                <div id="emoji-picker-{{ cls[0] }}" style="display: none;">
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F600">😀</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F603">😃</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F60D">😍</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F604">😄</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F601">😁</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F606">😆</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F605">😅</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F923">🤣</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F602">😂</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F642">🙂</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F643">🙃</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F609">😉</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F60A">😊</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F607">😇</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F970">🥰</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F4A9">💩</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F921">🤡</button>
+                    <span id="selected-emoji-{{ cls[0] }}" data-emoji-code=""></span>
+                    <button class="submit-button" id="submit-button-{{ cls[0] }}" style="display: none;" data-student-id="{{ stu_id }}" data-class-id="{{ cls[0] }}">提交</button>
+                    <button class="cancel-button" data-class-id="{{ cls[0] }}">取消</button>
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+        {% else %}
+        <p>没有找到课程记录。</p>
+        {% endif %}
+    </div>
+    <!-- 页脚 -->
+    <footer>
+        <p>&copy; 2024 学生评估系统 | 提升学习体验，共建和谐课堂</p>
+    </footer>
 </body>
 </html>
