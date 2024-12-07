@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>管理员主页</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        function decodeEmoji(emojiCode) {
+            return String.fromCodePoint(parseInt(emojiCode.replace('U+', '0x')));
+        }
+
+        function displayEmojis() {
+            const emojiElements = document.querySelectorAll('.emoji-code');
+            emojiElements.forEach(element => {
+                const emojiCode = element.textContent;
+                element.textContent = decodeEmoji(emojiCode);
+            });
+        }
+
+        function drawPieChart(className, data) {
+            const ctx = document.getElementById(`chart-${className}`).getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: data.map(d => decodeEmoji(d.emoji_code)),
+                    datasets: [{
+                        data: data.map(d => d.count),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // 允许自定义宽高比
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: `课程: ${className}`
+                        }
+                    }
+                }
+            });
+        }
+
+        function deleteEvalution(evalutionId) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/delete_evalution', true);
+            xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        alert('评价已删除');
+                        location.reload();
+                    } else {
+                        alert('删除失败');
+                    }
+                }
+            };
+            xhr.send(JSON.stringify({ evalution_id: evalutionId }));
+        }
+
+        window.onload = function() {
+            displayEmojis();
+            const chartsData = {{ charts_data | tojson }};
+            for (const teacherName in chartsData) {
+                for (const className in chartsData[teacherName]) {
+                    drawPieChart(`${teacherName}-${className}`, chartsData[teacherName][className]);
+                }
+            }
+
+            // 连接到Socket.IO服务器
+            const socket = io();
+            socket.on('refresh', function() {
+                location.reload(); // 刷新页面
+            });
+        };
+    </script>
+    <style>
+        .chart-container {
+            width: 400px; /* 设置图表容器的宽度 */
+            height: 400px; /* 设置图表容器的高度 */
+            margin: 20px auto; /* 居中对齐 */
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome, Admin!</h1>
+    {% if charts_data %}
+        <h2>所有教师的课程评价:</h2>
+        {% for teacher_name, classes in charts_data.items() %}
+            <h3>教师: {{ teacher_name }}</h3>
+            {% for class_name, evaluations in classes.items() %}
+                <h4>课程名称: {{ class_name }}</h4>
+                <div class="chart-container">
+                    <canvas id="chart-{{ teacher_name }}-{{ class_name }}"></canvas>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% else %}
+        <p>没有找到评价记录。</p>
+    {% endif %}
+
+    
+    {% if student_evalution %}
+        <h2>所有学生的评价:</h2>
+        <ul>
+        {% for eval in student_evalution %}
+            <li>
+                评价ID: {{ eval[0] }}, 学生: {{ eval[1] }}, 课程ID: {{ eval[2] }}, 课程: {{ eval[3] }}, 教师: {{ eval[4] }}, Emoji: <span class="emoji-code">{{ eval[5] }}</span>, 日期: {{ eval[6] }}
+                <button onclick="deleteEvalution({{ eval[0] }})">删除</button>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>没有找到学生评价记录。</p>
+    {% endif %}
+</body>
+</html>
