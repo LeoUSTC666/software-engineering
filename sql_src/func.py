@@ -160,6 +160,8 @@ def insert_student_evalution(student_id, class_id, emoji_code):
         cursor = conn.cursor()
         sql = "INSERT INTO evalution (student_id, class_id, emoji_code, evalution_date) VALUES (%s, %s, %s, %s)"
         cursor.execute(sql, (student_id, class_id, emoji_code,datetime.now()))
+        sql2 = "UPDATE TABLE_CHANGE_LOG SET IS_CHANGED = 1 WHERE CHANGE_ID = 1"
+        cursor.execute(sql2)
         conn.commit()
         cursor.close()
         conn.close()
@@ -233,10 +235,30 @@ def delete_student_evalution(evalution_id):
         cursor = conn.cursor()
         sql = "DELETE FROM evalution WHERE evalution_id = %s"
         cursor.execute(sql, (evalution_id,))
+        sql2 = "UPDATE TABLE_CHANGE_LOG SET IS_CHANGED = 1 WHERE CHANGE_ID = 1"
+        cursor.execute(sql2)
         conn.commit()
         cursor.close()
         conn.close()
         return True
+    except pymysql.MySQLError as e:
+        print(f"Error executing query: {e}")
+        return None
+    
+def search_is_changed():
+    conn = get_db_connection()
+    if conn is None:
+        return None
+    try:
+        cursor = conn.cursor()
+        sql = """
+        call SELECT_TABLE_CHANGE_LOG()
+        """
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return result[0][0]
     except pymysql.MySQLError as e:
         print(f"Error executing query: {e}")
         return None

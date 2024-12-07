@@ -4,6 +4,7 @@
     <title>管理员主页</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
     <script>
         function decodeEmoji(emojiCode) {
             return String.fromCodePoint(parseInt(emojiCode.replace('U+', '0x')));
@@ -87,11 +88,24 @@
             }
 
             // 连接到Socket.IO服务器
-            const socket = io();
-            socket.on('refresh', function() {
-                location.reload(); // 刷新页面
-            });
+            //const socket = io();
+            //socket.on('refresh', function() {
+            //    location.reload(); // 刷新页面
+            //});
         };
+        setInterval(function() {
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
+            socket.on('refresh_response', function() {
+                socket.emit('no_refresh');
+                location.reload(true); // 刷新页面
+                //location.reload(true); // 刷新页面
+            });
+            socket.on('no_refresh', function() {
+                socket.emit('no_refresh');
+            });
+            socket.emit('refresh_request');    
+        }, 5000);
+        
     </script>
     <style>
         .chart-container {
