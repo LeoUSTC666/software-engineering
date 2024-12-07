@@ -8,19 +8,98 @@
 -->
 <!-- elder_login.html -->
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>学生登录</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        .login-container h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 90%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-    <form method="post">
-        <label for="student_id">请输入学号和密码:</label>
-        <input type="number" id="student_id" name="student_id" required>
-        <input type="number" id="password" name="password" required>
-        <input type="submit" value="登录">
-    </form>
-    {% if error %}
-        <p style="color: red;">{{ error }}</p>
-    {% endif %}
+    <div class="login-container">
+        <h1>学生登录</h1>
+        <form method="POST" action="/student_login" onsubmit="return validateForm()">
+            {% if error %}
+                <p class="error-message">{{ error }}</p>
+            {% endif %}
+            
+            <div class="form-group">
+                <label for="student-id">学号:</label>
+                <input type="text" id="student-id" name="student_id" placeholder="请输入学号">
+            </div>
+
+            <div class="form-group">
+                <label for="password">密码:</label>
+                <input type="password" id="password" name="password" placeholder="请输入密码">
+            </div>
+
+            <button type="submit">登录</button>
+        </form>
+    </div>
+
+    <script>
+        function validateForm() {
+            const studentId = document.getElementById('student-id').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!studentId || !password) {
+                alert('请填写学号和密码！');
+                return false;
+            }
+            
+            return true;
+        }
+    </script>
 </body>
 </html>

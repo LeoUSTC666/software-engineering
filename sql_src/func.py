@@ -8,10 +8,12 @@ LastEditTime: 2024-12-06 21:59:42
 '''
 from datetime import datetime
 import pymysql
+from pymysql import Error
+
 
 def get_db_connection():
     try:
-        conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='leo520', db='lab2', charset='utf8')
+        conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='123456', db='evalution_system', charset='utf8')
         return conn
     except pymysql.MySQLError as e:
         print(f"Error connecting to the database: {e}")
@@ -241,3 +243,41 @@ def delete_student_evalution(evalution_id):
         print(f"Error executing query: {e}")
         return None
     
+def save_to_db(teacher_id,filename):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        #查询数据库中是否有该用户的图片路径
+        cursor.execute("SELECT * FROM images WHERE TEACHER_ID = %s", (teacher_id,))
+        user = cursor.fetchone()
+        #如果没有就插入
+        if not user:
+            query = "INSERT INTO images (teacher_id, image_path) VALUES (%s, %s)"
+            params = (teacher_id, filename)
+            cursor.execute(query, params)
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return
+        # 更新数据库中的文件路径
+        query = "UPDATE images SET image_path = %s WHERE teacher_id = %s"
+        params = (filename, teacher_id)
+        cursor.execute(query, params)
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Error as e:
+        print(e)
+
+def get_user_image(TEACHER_ID):
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            #print(username)
+            cursor.execute("SELECT image_path FROM images WHERE TEACHER_ID = %s", (TEACHER_ID,))
+            image_path = cursor.fetchone()[0]
+            cursor.close()
+            conn.close()
+            return image_path
+        except Error as e:
+            print(e)

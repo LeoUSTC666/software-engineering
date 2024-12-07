@@ -1,0 +1,186 @@
+<!--
+ * @Descripttion: 
+ * @version: 
+ * @Author: Leo
+ * @Date: 2024-11-29 17:20:10
+ * @LastEditors: Leo
+ * @LastEditTime: 2024-12-06 18:06:50
+-->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>学生主页</title>
+    <script>
+        function decodeEmoji(emojiCode) {
+            return String.fromCodePoint(parseInt(emojiCode.replace('U+', '0x')));
+        }
+
+        function displayEmojis() {
+            const emojiElements = document.querySelectorAll('.emoji-code');
+            emojiElements.forEach(element => {
+                const emojiCode = element.textContent;
+                element.textContent = decodeEmoji(emojiCode);
+            });
+        }
+
+        function showEmojiPicker(classId) {
+            const picker = document.getElementById(`emoji-picker-${classId}`);
+            picker.style.display = 'block';
+        }
+
+        function hideEmojiPicker(classId) {
+            const picker = document.getElementById(`emoji-picker-${classId}`);
+            picker.style.display = 'none';
+        }
+
+        function selectEmoji(classId, emojiCode) {
+            const selectedEmoji = document.getElementById(`selected-emoji-${classId}`);
+            selectedEmoji.textContent = decodeEmoji(emojiCode);
+            selectedEmoji.dataset.emojiCode = emojiCode;
+            const submitButton = document.getElementById(`submit-button-${classId}`);
+            submitButton.style.display = 'inline';
+        }
+
+        function submitEmoji(studentId, classId) {
+            const selectedEmoji = document.getElementById(`selected-emoji-${classId}`);
+            const emojiCode = selectedEmoji.dataset.emojiCode;
+            const xhr = new XMLHttpRequest();
+            console.log('Initializing request...');
+            xhr.open('POST', '/submit_emoji', true);
+            xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    console.log('Request completed with status:', xhr.status);
+                    if (xhr.status === 200) {
+                        alert('评价已提交');
+                        location.reload();
+                    } else {
+                        alert('提交失败');
+                    }
+                }
+            };
+            console.log('Sending request with data:', {
+                student_id: studentId,
+                class_id: classId,
+                emoji_code: emojiCode
+            });
+            xhr.send(JSON.stringify({
+                student_id: studentId,
+                class_id: classId,
+                emoji_code: emojiCode
+            }));
+        }
+        function deleteEvalution(evalution_id) {
+            const xhr = new XMLHttpRequest();
+            console.log('Initializing request...');
+            xhr.open('POST', '/delete_evalution', true);
+            xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    console.log('Request completed with status:', xhr.status);
+                    if (xhr.status === 200) {
+                        alert('评价已删除');
+                        location.reload();
+                    } else {
+                        alert('删除失败');
+                    }
+                }
+            };
+            console.log('Sending request with data:', {
+                evalution_id: evalution_id
+            });
+            xhr.send(JSON.stringify({
+                evalution_id: evalution_id
+            }));
+        }
+
+        window.onload = function() {
+            displayEmojis();
+            const emojiButtons = document.querySelectorAll('.emoji-button');
+            emojiButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const classId = this.dataset.classId;
+                    const emojiCode = this.dataset.emojiCode;
+                    selectEmoji(classId, emojiCode);
+                });
+            });
+
+            const submitButtons = document.querySelectorAll('.submit-button');
+            submitButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const studentId = this.dataset.studentId;
+                    const classId = this.dataset.classId;
+                    submitEmoji(studentId, classId);
+                });
+            });
+
+            const cancelButtons = document.querySelectorAll('.cancel-button');
+            cancelButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const classId = this.dataset.classId;
+                    hideEmojiPicker(classId);
+                });
+            });
+
+            const deleteButtons = document.querySelectorAll('.delete-button');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const evalutionId = this.dataset.evalutionId;
+                    deleteEvalution(evalutionId);
+                });
+            });
+        };
+    </script>
+</head>
+<body>
+    <h1>Welcome, {{ username }}!</h1>
+    {% if stu_evalution %}
+        <h2>你的评价:</h2>
+        <ul>
+        {% for eval in stu_evalution %}
+            <li>
+                Evalution ID: {{eval[0]}}, Class Name: {{ eval[2] }}, Teacher Name: {{ eval[3] }}, Emoji: <span class="emoji-code">{{ eval[4] }}</span>, Date: {{ eval[5] }}
+                <button class="delete-button" data-evalution-id="{{ eval[0] }}">删除</button>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>没有找到评价记录。</p>
+    {% endif %}
+    {% if stu_class %}
+        <h2>你的课程:</h2>
+        <ul>
+        {% for cls in stu_class %}
+            <li>
+                Class ID: {{ cls[0] }}, Class Name: {{ cls[1] }}, Teacher: {{ cls[2] }}
+                <button onclick="showEmojiPicker({{ cls[0] }})">评价</button>
+                <div id="emoji-picker-{{ cls[0] }}" style="display: none;">
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F600">😀</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F603">😃</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F60D">😍</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F604">😄</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F601">😁</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F606">😆</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F605">😅</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F923">🤣</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F602">😂</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F642">🙂</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F643">🙃</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F609">😉</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F60A">😊</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F607">😇</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F970">🥰</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F4A9">💩</button>
+                    <button class="emoji-button" data-class-id="{{ cls[0] }}" data-emoji-code="U+1F921">🤡</button>
+                    <span id="selected-emoji-{{ cls[0] }}" data-emoji-code=""></span>
+                    <button class="submit-button" id="submit-button-{{ cls[0] }}" style="display: none;" data-student-id="{{ stu_id }}" data-class-id="{{ cls[0] }}">提交</button>
+                    <button class="cancel-button" data-class-id="{{ cls[0] }}">取消</button>
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>没有找到课程记录。</p>
+    {% endif %}
+</body>
+</html>
