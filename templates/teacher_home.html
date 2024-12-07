@@ -18,6 +18,16 @@
     </script>
 </head>
 <body>
+    <!--此处展示一个图片,已获取一个绝对地址存储在image_path -->
+    <div class="centered-content">
+      <img src="{{image_path}}" alt="个人头像" width="200" height="200">
+    <!--此处加入一个跳转至上传图片的按钮 -->
+    <form action="/upload" method="post" enctype=multipart/form-data>
+        <input type="hidden" name="teacher_id" value="{{teacher_id}}">
+        <input type="hidden" name="username" value="{{username}}">
+        <input type=file name=image>
+        <input type=submit value=上传>
+    </form>
     <h1>Welcome, {{ username }}!</h1>
     {% if teacher_evalution %}
         <h2>你的课程评价:</h2>

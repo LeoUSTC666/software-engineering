@@ -10,7 +10,7 @@ from time import sleep
 from datetime import datetime
 from flask_socketio import SocketIO, emit
 from flask import Flask, request, render_template, url_for, redirect, jsonify
-from sql_src.func import search_is_changed, search_student_evalution, validate_student_login, search_student_class, insert_student_evalution,delete_student_evalution, validate_teacher_login,search_teacher_evalution,search_all_teacher_evalution,validate_admin_login, search_all_student_evalution
+from sql_src.func import search_is_changed, get_user_image,save_to_db,search_student_evalution, validate_student_login, search_student_class, insert_student_evalution,delete_student_evalution, validate_teacher_login,search_teacher_evalution,search_all_teacher_evalution,validate_admin_login, search_all_student_evalution
 
 import pymysql
 import os
@@ -100,7 +100,8 @@ def teacher_home():
         if current_class is not None:
             teacher_evalution.append((current_class, curr_evalution))
         print("teacher_evalution:", teacher_evalution)
-    return render_template('teacher_home.html', teacher_id = teacher_id, username=username, teacher_evalution=teacher_evalution)
+    image_path = get_user_image(teacher_id)
+    return render_template('teacher_home.html', teacher_id = teacher_id, username=username, teacher_evalution=teacher_evalution, image_path=image_path)
 
 @app.route('/student_login', methods=['GET', 'POST'])
 def student_login():
@@ -153,6 +154,24 @@ def delete_evalution():
         return jsonify({'message': '评价已删除'}), 200
     else:
         return jsonify({'message': '删除失败'}), 500
+    
+@app.route('/upload/', methods=['GET', 'POST'])
+def upload():
+    if request.method == 'POST':
+        file = request.files['image']
+        username = request.form['username']  
+        teacher_id = request.form['teacher_id']  
+        directory = os.path.join(os.getcwd(), 'static\\images')
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    username = request.form['username']  
+    teacher_id = request.form['teacher_id']  
+    filename = os.path.join(directory, file.filename)
+    file.save(filename)
+    filename = '../static/images/' + file.filename
+    save_to_db(teacher_id, filename)
+    return redirect(url_for('teacher_home', teacher_id=teacher_id, username=username))
+
 
 @socketio.on('refresh_request')
 def refresh():

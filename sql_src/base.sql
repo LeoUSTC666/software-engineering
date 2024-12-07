@@ -1,9 +1,9 @@
--- DROP DATABASE IF EXISTS `evalution_system`;
+DROP DATABASE IF EXISTS `evalution_system`;
 
--- CREATE DATABASE `evalution_system`;
--- USE `evalution_system`;
+CREATE DATABASE `evalution_system`;
+USE `evalution_system`;
 
-USE `lab2`;
+-- USE `lab2`;
 DROP TABLE IF EXISTS `CLASS_STUDENT`;
 DROP TABLE IF EXISTS `EVALUTION`; 
 -- DROP TABLE IF EXISTS `EMOJI`;
