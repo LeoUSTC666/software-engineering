@@ -6,10 +6,11 @@ Date: 2024-11-29 17:00:10
 LastEditors: Leo
 LastEditTime: 2024-12-07 16:22:41
 '''
+from time import sleep
 from datetime import datetime
-# from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit
 from flask import Flask, request, render_template, url_for, redirect, jsonify
-from sql_src.func import get_user_image,save_to_db,search_student_evalution, validate_student_login, search_student_class, insert_student_evalution,delete_student_evalution, validate_teacher_login,search_teacher_evalution,search_all_teacher_evalution,validate_admin_login, search_all_student_evalution
+from sql_src.func import search_is_changed, get_user_image,save_to_db,search_student_evalution, validate_student_login, search_student_class, insert_student_evalution,delete_student_evalution, validate_teacher_login,search_teacher_evalution,search_all_teacher_evalution,validate_admin_login, search_all_student_evalution
 
 import pymysql
 import os
@@ -17,6 +18,7 @@ import os
 pymysql.install_as_MySQLdb()
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 
 # conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='leo520', db='lab2', charset='utf8')
 
@@ -171,5 +173,17 @@ def upload():
     return redirect(url_for('teacher_home', teacher_id=teacher_id, username=username))
 
 
+@socketio.on('refresh_request')
+def refresh():
+    #检测数据库是否有更新
+    result = search_is_changed()
+    print('result:', result)
+    if result == 1:
+        print('refresh!!!!!')
+        emit('refresh_response', broadcast=True) 
+    else:
+        emit('no_refresh', broadcast=True)  
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    #app.run(host='0.0.0.0', port=5000, debug=True)
+    socketio.run(app,host='0.0.0.0', port=5000, debug=True)
