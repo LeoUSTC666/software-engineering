@@ -85,6 +85,29 @@ def search_all_teacher_evalution():
     except pymysql.MySQLError as e:
         print(f"Error executing query: {e}")
         return None
+    
+def search_all_student_evalution():
+    conn = get_db_connection()
+    if conn is None:
+        return None
+    try:
+        cursor = conn.cursor()
+        sql = """
+        SELECT e.EVALUTION_ID, s.STUDENT_NAME, c.CLASS_ID, c.CLASS_NAME, t.TEACHER_NAME, e.EMOJI_CODE, e.EVALUTION_DATE
+        FROM EVALUTION e
+        JOIN CLASS_INFO c ON e.CLASS_ID = c.CLASS_ID
+        JOIN USER_STUDENT s ON e.STUDENT_ID = s.STUDENT_ID
+        JOIN USER_TEACHER t ON c.CLASS_TEACHER_ID = t.TEACHER_ID
+        ORDER BY s.STUDENT_NAME, c.CLASS_NAME
+        """
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return result
+    except pymysql.MySQLError as e:
+        print(f"Error executing query: {e}")
+        return None
 
 def search_student_class(student_id):
     conn = get_db_connection()

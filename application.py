@@ -4,11 +4,12 @@ version:
 Author: Leo
 Date: 2024-11-29 17:00:10
 LastEditors: Leo
-LastEditTime: 2024-12-07 00:18:39
+LastEditTime: 2024-12-07 16:22:41
 '''
 from datetime import datetime
+# from flask_socketio import SocketIO, emit
 from flask import Flask, request, render_template, url_for, redirect, jsonify
-from sql_src.func import search_student_evalution, validate_student_login, search_student_class, insert_student_evalution,delete_student_evalution, validate_teacher_login,search_teacher_evalution,search_all_teacher_evalution,validate_admin_login
+from sql_src.func import search_student_evalution, validate_student_login, search_student_class, insert_student_evalution,delete_student_evalution, validate_teacher_login,search_teacher_evalution,search_all_teacher_evalution,validate_admin_login, search_all_student_evalution
 
 import pymysql
 import os
@@ -44,9 +45,20 @@ def admin_login():
 
 @app.route('/admin_home')
 def admin_home():
-    all_teacher_evalution = search_all_teacher_evalution()
-    print("all_teacher_evalution:", all_teacher_evalution)
-    return render_template('admin_home.html',all_teacher_evalution=all_teacher_evalution)
+    raw_teacher_evalution = search_all_teacher_evalution()
+    raw_student_evalution = search_all_student_evalution()
+    # 处理数据，将其按教师分组
+    charts_data = {}
+    for eval in raw_teacher_evalution:
+        teacher_name, class_name, emoji_code, emoji_count = eval
+        if teacher_name not in charts_data:
+            charts_data[teacher_name] = {}
+        if class_name not in charts_data[teacher_name]:
+            charts_data[teacher_name][class_name] = []
+        charts_data[teacher_name][class_name].append({'emoji_code': emoji_code, 'count': emoji_count})
+
+    return render_template('admin_home.html', charts_data=charts_data,student_evalution=raw_student_evalution)
+
 
 @app.route('/teacher_login',methods = ['GET', 'POST'])
 def teacher_login():
