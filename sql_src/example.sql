@@ -9,7 +9,7 @@ drop table if exists book_list;
 
 DROP PROCEDURE IF EXISTS ExpelDisciple;
 DROP procedure IF exists ReserveBook;
-DROP  TRIGGER IF EXISTS insert_dis_head;
+DROP TRIGGER IF EXISTS insert_dis_head;
 DROP FUNCTION IF EXISTS CountActiveDisciples;
 
 CREATE TABLE `disciple_list` (

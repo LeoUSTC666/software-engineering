@@ -5,9 +5,10 @@ from flask_socketio import SocketIO, emit
 from flask import Flask, request, render_template, url_for, redirect, jsonify
 from flask_login import UserMixin  # 引入用户基类
 from werkzeug.security import check_password_hash
-from model.admin.admin import get_db_connection, create_admin_account, validate_admin_login, search_is_changed,admin_init_routes
-from model.teacher.teacher import get_db_connection, validate_teacher_login, search_teacher_evalution,teacher_init_routes,save_to_db
-from model.student.student import get_db_connection, validate_student_login, search_student_evalution, search_student_class, insert_student_evalution, delete_student_evalution,student_init_routes
+from model.admin.admin import  create_admin_account, validate_admin_login, search_is_changed,admin_init_routes
+from model.teacher.teacher import  validate_teacher_login, search_teacher_evalution,teacher_init_routes,save_to_db
+from model.student.student import  validate_student_login, search_student_evalution, search_student_class, insert_student_evalution, delete_student_evalution,student_init_routes
+from model.conn import get_db_connection
 import pymysql
 import os
 

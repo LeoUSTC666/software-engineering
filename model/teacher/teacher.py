@@ -3,6 +3,7 @@ import pymysql
 from pymysql import Error
 from flask import Flask, jsonify,session
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from ..conn import get_db_connection
 
 teacher_bp = Blueprint('teacher', __name__)
 import pymysql
@@ -68,13 +69,13 @@ def upload():
     return redirect(url_for('teacher.teacher_home', teacher_id=teacher_id, username=username))
 
 
-def get_db_connection():
-    try:
-        conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='123456', db='evalution_system', charset='utf8')
-        return conn
-    except pymysql.MySQLError as e:
-        print(f"Error connecting to the database: {e}")
-        return None
+# def get_db_connection():
+#     try:
+#         conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='123456', db='evalution_system', charset='utf8')
+#         return conn
+#     except pymysql.MySQLError as e:
+#         print(f"Error connecting to the database: {e}")
+#         return None
 
 def search_teacher_evalution(teacher_id):
     conn = get_db_connection()

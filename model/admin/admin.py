@@ -3,6 +3,7 @@ import pymysql
 from pymysql import Error
 from flask import Flask, jsonify
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from ..conn import get_db_connection
 
 
 admin_bp = Blueprint('admin', __name__)
@@ -50,13 +51,13 @@ def delete_evalution():
     else:
         return jsonify({'message': '删除失败'}), 500
 
-def get_db_connection():
-    try:
-        conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='123456', db='evalution_system', charset='utf8')
-        return conn
-    except pymysql.MySQLError as e:
-        print(f"Error connecting to the database: {e}")
-        return None
+# def get_db_connection():
+#     try:
+#         conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='123456', db='evalution_system', charset='utf8')
+#         return conn
+#     except pymysql.MySQLError as e:
+#         print(f"Error connecting to the database: {e}")
+#         return None
     
 def create_admin_account(admin_id, admin_name, admin_password):
     conn = get_db_connection()
