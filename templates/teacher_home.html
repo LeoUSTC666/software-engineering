@@ -4,6 +4,17 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>教师主页</title>
+        <script>
+            function showSubmitButton() {
+                var fileInput = document.getElementById('file-input');
+                var submitButton = document.getElementById('submit-button');
+                if (fileInput.files.length > 0) {
+                    submitButton.style.display = 'block';
+                } else {
+                    submitButton.style.display = 'none';
+                }
+            }
+        </script>
         <style>
             body {
                 font-family: Arial, sans-serif;
@@ -62,6 +73,11 @@
                 border-radius: 10px;
             }
         </style>
+        <style>
+            #submit-button {
+                display: none;
+            }
+        </style>
         <script>
             // Decode emoji codes to display actual emojis
             function decodeEmoji(emojiCode) {
@@ -89,15 +105,15 @@
     <!--此处展示一个图片,已获取一个绝对地址存储在image_path -->
     <div class="container">
         <!-- 添加一张图片作为视觉吸引 -->
-        <h2>个人头像</h2>
-        <img src="{{image_path}}" alt="个人头像" width="200" height="200">
-        <!--此处加入一个跳转至上传图片的按钮 -->
-        <form action="/upload" method="post" enctype=multipart/form-data>
-            <input type="hidden" name="teacher_id" value="{{teacher_id}}">
-            <input type="hidden" name="username" value="{{username}}">
-            <input type=file name=image>
-            <input type=submit value=上传>
-        </form>
+        <h2>教师照片</h2>
+    <img src="{{image_path}}" alt="个人头像" width="200" height="200">
+    <!--此处加入一个跳转至上传图片的按钮 -->
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="teacher_id" value="{{teacher_id}}">
+        <input type="hidden" name="username" value="{{username}}">
+        <input type="file" id="file-input" name="image" onchange="showSubmitButton()">
+        <button type="submit" id="submit-button">上传</button>
+    </form>
         {% if teacher_evalution %}
             <h2>你的课程评价:</h2>
             {%for eval in teacher_evalution%}

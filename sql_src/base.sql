@@ -180,7 +180,9 @@ CREATE TABLE images
 	image_path VARCHAR(255)
 );
 
-INSERT INTO `images` (`TEACHER_ID`, `image_path`) VALUES ('1', '../static/images/1707496853306.jpg');
+INSERT INTO `images` (`TEACHER_ID`, `image_path`) VALUES ('1', '../static/images/1.jpg');
+INSERT INTO `images` (`TEACHER_ID`, `image_path`) VALUES ('2', '../static/images/2.jpg');
+INSERT INTO `images` (`TEACHER_ID`, `image_path`) VALUES ('3', '../static/images/3.jpg');
 
 DROP EVENT IF EXISTS `RESET_TABLE_CHANGE_LOG`;
 CREATE EVENT RESET_TABLE_CHANGE_LOG 

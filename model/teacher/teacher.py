@@ -180,7 +180,5 @@ def get_user_image(TEACHER_ID):
         except Error as e:
             print(e)
 
-
-
 def teacher_init_routes(app):
     app.register_blueprint(teacher_bp)
