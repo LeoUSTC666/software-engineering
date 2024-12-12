@@ -17,9 +17,9 @@ def student_login():
         # print("id: ", student_id)
         # print("password: ", password)
         user = validate_student_login(student_id, password)
-        # print("user: ", user)
+        print("user: ", user)
         if user:
-            return redirect(url_for('student.student_home', username=user[3], stu_id=student_id))
+            return redirect(url_for('student.student_home', username=user[2], stu_id=student_id))
         else:
             return render_template('student_login.html', error='Invalid username or password')
     return render_template('student_login.html')
@@ -234,7 +234,7 @@ def register_student(student_id, student_name, nickname, password):
     try:
         cursor = conn.cursor()
         # 插入新用户信息到USER_STUDENT表中
-        sql_insert = "INSERT INTO USER_STUDENT (STUDENT_ID, STUDENT_NAME, STUDENT_NICKNAME, STUDENT_PASSWORD) VALUES (%s, %s, %s, %s)"
+        sql_insert = "INSERT INTO USER_STUDENT (USER_STU_ID, STUDENT_NAME, STUDENT_NICKNAME, STUDENT_PASSWORD) VALUES (%s, %s, %s, %s)"
         cursor.execute(sql_insert, (student_id, student_name, nickname, password))
         # 更新STU_INFO表中的FLAG字段
         sql_update = "UPDATE STU_INFO SET FLAG = 1 WHERE STU_ID = %s"
