@@ -72,8 +72,8 @@ def register():
         student_name = request.form['student_name']
         student_id = request.form['student_id']
         nickname = request.form['nickname']
-        password = request.form['password']
-        new_password = request.form['new_password']
+        password = request.form['verify_password']
+        new_password = request.form['login_password']
         can_register, message = can_register_student(student_id, student_name, password)
         print(can_register)
         if can_register:
