@@ -4,7 +4,9 @@ from pymysql import Error
 from flask import Flask, jsonify
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from ..conn import get_db_connection
-
+import pandas as pd
+from io import BytesIO
+from flask import send_file
 
 admin_bp = Blueprint('admin', __name__)
 import pymysql
@@ -58,6 +60,26 @@ def delete_evalution():
 #     except pymysql.MySQLError as e:
 #         print(f"Error connecting to the database: {e}")
 #         return None
+@admin_bp.route('/export_evalution')
+def export_evalution():
+    # 获取评价数据
+    raw_teacher_evalution = search_all_teacher_evalution()
+    raw_student_evalution = search_all_student_evalution()
+
+    # 将数据转换为 DataFrame
+    student_df = pd.DataFrame(raw_student_evalution, columns=['evalution_id', 'student_name', 'class_id', 'class_name', 'teacher_name', 'emoji_code', 'evalution_date'])
+    teacher_df = pd.DataFrame(raw_teacher_evalution, columns=['teacher_name', 'class_name', 'emoji_code', 'emoji_count'])
+
+    # 创建一个 Excel 文件
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        teacher_df.to_excel(writer, sheet_name='Teacher Evalution', index=False)
+        student_df.to_excel(writer, sheet_name='Student Evalution', index=False)
+
+    output.seek(0)
+
+    # 返回 Excel 文件
+    return send_file(output, download_name='evalution_data.xlsx', as_attachment=True)
     
 def create_admin_account(admin_id, admin_name, admin_password):
     conn = get_db_connection()
@@ -122,7 +144,7 @@ def search_all_student_evalution():
         SELECT e.EVALUTION_ID, s.STUDENT_NAME, c.CLASS_ID, c.CLASS_NAME, t.TEACHER_NAME, e.EMOJI_CODE, e.EVALUTION_DATE
         FROM EVALUTION e
         JOIN CLASS_INFO c ON e.CLASS_ID = c.CLASS_ID
-        JOIN USER_STUDENT s ON e.STUDENT_ID = s.STUDENT_ID
+        JOIN USER_STUDENT s ON e.STUDENT_ID = s.USER_STU_ID
         JOIN USER_TEACHER t ON c.CLASS_TEACHER_ID = t.TEACHER_ID
         ORDER BY s.STUDENT_NAME, c.CLASS_NAME
         """

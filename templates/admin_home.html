@@ -168,6 +168,9 @@
     <div class="image-container">
         <img src="admin_dashboard.jpg" alt="管理员主页图片">
     </div>
+    <form action="{{ url_for('admin.export_evalution') }}" method="get">
+        <button type="submit">导出评价数据</button>
+    </form>
     {% if charts_data %}
         <h2>所有教师的课程评价:</h2>
         {% for teacher_name, classes in charts_data.items() %}
