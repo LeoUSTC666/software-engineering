@@ -147,6 +147,9 @@
                 <button type="button" id="cancel-button">取消</button>
             </form>
         </div>
+        <form action="{{ url_for('teacher.logout') }}" method="post" style="display: inline;">
+            <button type="submit">登出</button>
+        </form>
         {% if teacher_evalution %}
             <h2>你的课程评价:</h2>
             {%for eval in teacher_evalution%}

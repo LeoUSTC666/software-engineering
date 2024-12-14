@@ -21,11 +21,16 @@ def admin_login():
         password = request.form['password']
         user = validate_admin_login(admin_id, password)
         if user:
-            print(1)
+            session['admin_id'] = admin_id  # 存储管理员 ID 在会话中
             return redirect(url_for('admin.admin_home'))
         else:
             return render_template('admin_login.html', error='Invalid admin_id or password')
     return render_template('admin_login.html')
+
+@admin_bp.route('/logout', methods=['POST'])
+def logout():
+    session.clear()
+    return redirect(url_for('admin.admin_login'))
 
 @admin_bp.route('/admin_home')
 def admin_home():

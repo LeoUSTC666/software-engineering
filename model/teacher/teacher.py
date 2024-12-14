@@ -23,6 +23,12 @@ def teacher_login():
             return render_template('teacher_login.html', error='Invalid userid or password')
     return render_template('teacher_login.html')
 
+@teacher_bp.route('/logout', methods=['POST'])
+def logout():
+    session.pop('teacher_id', None)
+    return redirect(url_for('teacher.teacher_login'))
+
+
 @teacher_bp.route('/teacher_home')
 def teacher_home():
     username = request.args.get('username')
