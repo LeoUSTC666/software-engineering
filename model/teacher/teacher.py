@@ -4,11 +4,21 @@ from pymysql import Error
 from flask import Flask, jsonify,session
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from ..conn import get_db_connection
+from functools import wraps
+from flask import g
 
 teacher_bp = Blueprint('teacher', __name__)
 import pymysql
 import secrets
 import os
+
+def teacher_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'teacher_id' not in session:
+            return redirect(url_for('teacher.teacher_login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @teacher_bp.route('/teacher_login', methods=['GET', 'POST'])
 def teacher_login():
@@ -25,12 +35,14 @@ def teacher_login():
     return render_template('teacher_login.html')
 
 @teacher_bp.route('/teacher_logout', methods=['POST'])
+@teacher_login_required
 def teacher_logout():
     session.pop('teacher_id', None)
     return redirect(url_for('teacher.teacher_login'))
 
 
 @teacher_bp.route('/teacher_home')
+@teacher_login_required
 def teacher_home():
     username = request.args.get('username')
     teacher_id = request.args.get('teacher_id')
@@ -60,6 +72,7 @@ def teacher_home():
     return render_template('teacher_home.html', teacher_id = teacher_id, username=username, teacher_evalution=teacher_evalution, image_path=image_path)
 
 @teacher_bp.route('/upload/', methods=['GET', 'POST'])
+@teacher_login_required
 def upload():
     if request.method == 'POST':
         file = request.files['image']
@@ -77,6 +90,7 @@ def upload():
     return redirect(url_for('teacher.teacher_home', teacher_id=teacher_id, username=username))
 
 @teacher_bp.route('/teacher_change_password', methods=['POST'])
+@teacher_login_required
 def teacher_change_password():
     teacher_id = session.get('teacher_id')
     if not teacher_id:

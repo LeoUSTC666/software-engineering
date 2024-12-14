@@ -4,6 +4,8 @@ from pymysql import Error
 from flask import Flask, jsonify
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from ..conn import get_db_connection
+from functools import wraps
+from flask import g
 
 student_bp = Blueprint('student', __name__)
 import pymysql
@@ -11,6 +13,13 @@ import secrets
 import os
 from functools import wraps
 
+def student_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'student_id' not in session:
+            return redirect(url_for('student.student_login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @student_bp.route('/student_login', methods=['GET', 'POST'])
 def student_login():
@@ -27,11 +36,13 @@ def student_login():
     return render_template('student_login.html')
 
 @student_bp.route('/student_logout', methods=['POST'])
+@student_login_required
 def student_logout():
     session.pop('student_id', None)
     return redirect(url_for('student.student_login'))
 
 @student_bp.route('/student_home')
+@student_login_required
 def student_home():
     username = request.args.get('username')
     stu_id = request.args.get('stu_id')
@@ -46,6 +57,7 @@ def student_home():
     return render_template('student_home.html', stu_id = stu_id, username=username, stu_evalution=stu_evalution, stu_class=stu_class)
 
 @student_bp.route('/submit_emoji', methods=['POST'])
+@student_login_required
 def submit_emoji():
     data = request.get_json()
     # print(99)
@@ -61,7 +73,8 @@ def submit_emoji():
     else:
         return jsonify({'message': '提交失败'}), 500
     
-@student_bp.route('/delete_evalution', methods=['POST'])
+@student_bp.route('/student_delete_evalution', methods=['POST'])
+@student_login_required
 def delete_evalution():
     data = request.get_json()
     evalution_id = data['evalution_id']
@@ -103,6 +116,7 @@ def register():
     return render_template('register.html')
 
 @student_bp.route('/student_change_password', methods=['POST'])
+@student_login_required
 def student_change_password():
     student_id = session.get('student_id')
     if not student_id:
