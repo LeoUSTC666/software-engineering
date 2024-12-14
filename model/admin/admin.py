@@ -4,13 +4,35 @@ from pymysql import Error
 from flask import Flask, jsonify
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from ..conn import get_db_connection
+import pandas as pd
+from io import BytesIO
+from flask import send_file
+from functools import wraps
+from flask import g
+from flask import Flask, render_template, redirect, url_for
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 
 admin_bp = Blueprint('admin', __name__)
 import pymysql
 import secrets
 
+#@admin_bp.before_request
+#def before_request():
+#    url = request.path
+#    if url == '/admin_login' or url == '/logout':
+#        pass
+#    else:
+#        if 'admin_id' not in session:
+#            return redirect(url_for('admin.admin_login'))
 
+def admin_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'admin_id' not in session:
+            return redirect(url_for('admin.admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @admin_bp.route('/admin_login', methods=['GET', 'POST'])
 def admin_login():
@@ -19,13 +41,20 @@ def admin_login():
         password = request.form['password']
         user = validate_admin_login(admin_id, password)
         if user:
-            print(1)
+            session['admin_id'] = admin_id  # 存储管理员 ID 在会话中
             return redirect(url_for('admin.admin_home'))
         else:
             return render_template('admin_login.html', error='Invalid admin_id or password')
     return render_template('admin_login.html')
 
+@admin_bp.route('/admin_logout', methods=['POST'])
+@admin_login_required
+def admin_logout():
+    session.pop('admin_id', None)
+    return redirect(url_for('admin.admin_login'))
+
 @admin_bp.route('/admin_home')
+@admin_login_required
 def admin_home():
     raw_teacher_evalution = search_all_teacher_evalution()
     raw_student_evalution = search_all_student_evalution()
@@ -41,8 +70,9 @@ def admin_home():
 
     return render_template('admin_home.html', charts_data=charts_data,student_evalution=raw_student_evalution)
 
-@admin_bp.route('/delete_evalution', methods=['POST'])
-def delete_evalution():
+@admin_bp.route('/admin_delete_evalution', methods=['POST'])
+@admin_login_required
+def admin_delete_evalution():
     data = request.get_json()
     evalution_id = data['evalution_id']
     success = delete_student_evalution(evalution_id)
@@ -58,7 +88,71 @@ def delete_evalution():
 #     except pymysql.MySQLError as e:
 #         print(f"Error connecting to the database: {e}")
 #         return None
+@admin_bp.route('/export_evalution')
+@admin_login_required
+def export_evalution():
+    # 获取评价数据
+    raw_teacher_evalution = search_all_teacher_evalution()
+    raw_student_evalution = search_all_student_evalution()
+
+    # 将数据转换为 DataFrame
+    student_df = pd.DataFrame(raw_student_evalution, columns=['evalution_id', 'student_name', 'class_id', 'class_name', 'teacher_name', 'emoji_code', 'evalution_date'])
+    teacher_df = pd.DataFrame(raw_teacher_evalution, columns=['teacher_name', 'class_name', 'emoji_code', 'emoji_count'])
+
+    # 创建一个 Excel 文件
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        teacher_df.to_excel(writer, sheet_name='Teacher Evalution', index=False)
+        student_df.to_excel(writer, sheet_name='Student Evalution', index=False)
+
+    output.seek(0)
+
+    # 返回 Excel 文件
+    return send_file(output, download_name='evalution_data.xlsx', as_attachment=True)
+
+@admin_bp.route('/filter_evalution', methods=['GET'])
+@admin_login_required
+def filter_evalution():
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    if not start_date or not end_date:
+        flash('请提供开始日期和结束日期')
+        return redirect(url_for('admin.admin_home'))
+
+    filtered_teacher_evalution = search_teacher_evalution_by_date(start_date, end_date)
+    filtered_student_evalution = search_student_evalution_by_date(start_date, end_date)
+
+    # 处理数据，将其按教师分组
+    charts_data = {}
+    for eval in filtered_teacher_evalution:
+        teacher_name, class_name, emoji_code, emoji_count = eval
+        if teacher_name not in charts_data:
+            charts_data[teacher_name] = {}
+        if class_name not in charts_data[teacher_name]:
+            charts_data[teacher_name][class_name] = []
+        charts_data[teacher_name][class_name].append({'emoji_code': emoji_code, 'count': emoji_count})
+
+    return render_template('admin_home.html', charts_data=charts_data, student_evalution=filtered_student_evalution)
     
+@admin_bp.route('/reset_filter', methods=['GET'])
+@admin_login_required
+def reset_filter():
+    raw_teacher_evalution = search_all_teacher_evalution()
+    raw_student_evalution = search_all_student_evalution()
+
+    # 处理数据，将其按教师分组
+    charts_data = {}
+    for eval in raw_teacher_evalution:
+        teacher_name, class_name, emoji_code, emoji_count = eval
+        if teacher_name not in charts_data:
+            charts_data[teacher_name] = {}
+        if class_name not in charts_data[teacher_name]:
+            charts_data[teacher_name][class_name] = []
+        charts_data[teacher_name][class_name].append({'emoji_code': emoji_code, 'count': emoji_count})
+
+    return render_template('admin_home.html', charts_data=charts_data, student_evalution=raw_student_evalution)
+
 def create_admin_account(admin_id, admin_name, admin_password):
     conn = get_db_connection()
     if conn is None:
@@ -122,7 +216,7 @@ def search_all_student_evalution():
         SELECT e.EVALUTION_ID, s.STUDENT_NAME, c.CLASS_ID, c.CLASS_NAME, t.TEACHER_NAME, e.EMOJI_CODE, e.EVALUTION_DATE
         FROM EVALUTION e
         JOIN CLASS_INFO c ON e.CLASS_ID = c.CLASS_ID
-        JOIN USER_STUDENT s ON e.STUDENT_ID = s.STUDENT_ID
+        JOIN USER_STUDENT s ON e.STUDENT_ID = s.USER_STU_ID
         JOIN USER_TEACHER t ON c.CLASS_TEACHER_ID = t.TEACHER_ID
         ORDER BY s.STUDENT_NAME, c.CLASS_NAME
         """
@@ -176,6 +270,60 @@ def search_is_changed():
         print(f"Error executing query: {e}")
         return None
     
+def search_teacher_evalution_by_date(start_date, end_date):
+    conn = get_db_connection()
+    if conn is None:
+        return None
+    try:
+        cursor = conn.cursor()
+        sql = """
+        SELECT t.TEACHER_NAME, c.CLASS_NAME, e.EMOJI_CODE, COUNT(e.EMOJI_CODE) as emoji_count
+        FROM EVALUTION e
+        JOIN CLASS_INFO c ON e.CLASS_ID = c.CLASS_ID
+        JOIN USER_TEACHER t ON c.CLASS_TEACHER_ID = t.TEACHER_ID
+        WHERE e.EVALUTION_DATE BETWEEN %s AND %s
+        GROUP BY t.TEACHER_NAME, c.CLASS_NAME, e.EMOJI_CODE
+        ORDER BY t.TEACHER_NAME, c.CLASS_NAME
+        """
+        cursor.execute(sql, (start_date, end_date))
+        result = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return result
+    except pymysql.MySQLError as e:
+        print(f"Error executing query: {e}")
+        return None
+
+def search_student_evalution_by_date(start_date, end_date):
+    conn = get_db_connection()
+    if conn is None:
+        return None
+    try:
+        cursor = conn.cursor()
+        sql = """
+        SELECT e.EVALUTION_ID, s.STUDENT_NAME, c.CLASS_ID, c.CLASS_NAME, t.TEACHER_NAME, e.EMOJI_CODE, e.EVALUTION_DATE
+        FROM EVALUTION e
+        JOIN CLASS_INFO c ON e.CLASS_ID = c.CLASS_ID
+        JOIN USER_STUDENT s ON e.STUDENT_ID = s.USER_STU_ID
+        JOIN USER_TEACHER t ON c.CLASS_TEACHER_ID = t.TEACHER_ID
+        WHERE e.EVALUTION_DATE BETWEEN %s AND %s
+        ORDER BY s.STUDENT_NAME, c.CLASS_NAME
+        """
+        cursor.execute(sql, (start_date, end_date))
+        result = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return result
+    except pymysql.MySQLError as e:
+        print(f"Error executing query: {e}")
+        return None
+    
+
+
+
+
+
+
 def admin_init_routes(app):
     app.register_blueprint(admin_bp)
     return app

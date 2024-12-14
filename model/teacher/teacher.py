@@ -4,25 +4,45 @@ from pymysql import Error
 from flask import Flask, jsonify,session
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from ..conn import get_db_connection
+from functools import wraps
+from flask import g
 
 teacher_bp = Blueprint('teacher', __name__)
 import pymysql
 import secrets
 import os
 
-@teacher_bp.route('/teacher_login',methods = ['GET', 'POST'])
+def teacher_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'teacher_id' not in session:
+            return redirect(url_for('teacher.teacher_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+@teacher_bp.route('/teacher_login', methods=['GET', 'POST'])
 def teacher_login():
     if request.method == 'POST':
         teacher_id = request.form['teacher_id']
         password = request.form['password']
         user = validate_teacher_login(teacher_id, password)
         if user:
+            session['teacher_id'] = teacher_id  # 存储教师 ID 在会话中
+            session['username'] = user[1]  # 存储用户名在会话中
             return redirect(url_for('teacher.teacher_home', username=user[1], teacher_id=teacher_id))
         else:
             return render_template('teacher_login.html', error='Invalid userid or password')
     return render_template('teacher_login.html')
 
+@teacher_bp.route('/teacher_logout', methods=['POST'])
+@teacher_login_required
+def teacher_logout():
+    session.pop('teacher_id', None)
+    return redirect(url_for('teacher.teacher_login'))
+
+
 @teacher_bp.route('/teacher_home')
+@teacher_login_required
 def teacher_home():
     username = request.args.get('username')
     teacher_id = request.args.get('teacher_id')
@@ -52,6 +72,7 @@ def teacher_home():
     return render_template('teacher_home.html', teacher_id = teacher_id, username=username, teacher_evalution=teacher_evalution, image_path=image_path)
 
 @teacher_bp.route('/upload/', methods=['GET', 'POST'])
+@teacher_login_required
 def upload():
     if request.method == 'POST':
         file = request.files['image']
@@ -68,6 +89,45 @@ def upload():
     save_to_db(teacher_id, filename)
     return redirect(url_for('teacher.teacher_home', teacher_id=teacher_id, username=username))
 
+@teacher_bp.route('/teacher_change_password', methods=['POST'])
+@teacher_login_required
+def teacher_change_password():
+    teacher_id = session.get('teacher_id')
+    if not teacher_id:
+        flash('请先登录')
+        return redirect(url_for('teacher.teacher_login'))
+
+    data = request.get_json()
+    old_password = data.get('old_password')
+    new_password = data.get('new_password')
+
+    # 验证旧密码
+    user = validate_teacher_login(teacher_id, old_password)
+    if not user:
+        return jsonify({'message': '旧密码错误'}), 400
+
+    # 更新新密码
+    success = update_teacher_password(teacher_id, new_password)
+    if success:
+        return jsonify({'message': '密码修改成功'}), 200
+    else:
+        return jsonify({'message': '密码修改失败'}), 500
+
+def update_teacher_password(teacher_id, new_password):
+    conn = get_db_connection()
+    if conn is None:
+        return False
+    try:
+        cursor = conn.cursor()
+        sql = "UPDATE USER_TEACHER SET TEACHER_PASSWORD = %s WHERE TEACHER_ID = %s"
+        cursor.execute(sql, (new_password, teacher_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except pymysql.MySQLError as e:
+        print(f"Error executing query: {e}")
+        return False
 
 # def get_db_connection():
 #     try:
@@ -122,7 +182,7 @@ def search_teacher_class(teacher_id):
         print(f"Error executing query: {e}")
         return None
     
-def  validate_teacher_login(teacher_id, password):
+def validate_teacher_login(teacher_id, password):
     conn = get_db_connection()
     if conn is None:
         return None
@@ -134,8 +194,10 @@ def  validate_teacher_login(teacher_id, password):
         cursor.close()
         conn.close()
         if user:
+            print('Login successful')
             return user
         else:
+            print('Invalid userid or password')
             return None
     except pymysql.MySQLError as e:
         print(f"Error executing query: {e}")
@@ -182,3 +244,4 @@ def get_user_image(TEACHER_ID):
 
 def teacher_init_routes(app):
     app.register_blueprint(teacher_bp)
+    return app

@@ -4,27 +4,45 @@ from pymysql import Error
 from flask import Flask, jsonify
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from ..conn import get_db_connection
+from functools import wraps
+from flask import g
 
 student_bp = Blueprint('student', __name__)
 import pymysql
 import secrets
+import os
+from functools import wraps
+
+def student_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'student_id' not in session:
+            return redirect(url_for('student.student_login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @student_bp.route('/student_login', methods=['GET', 'POST'])
 def student_login():
     if request.method == 'POST':
         student_id = request.form['student_id']
         password = request.form['password']
-        # print("id: ", student_id)
-        # print("password: ", password)
         user = validate_student_login(student_id, password)
-        # print("user: ", user)
         if user:
-            return redirect(url_for('student.student_home', username=user[3], stu_id=student_id))
+            session['username'] = user[1]  # 存储用户名在会话中
+            session['student_id'] = student_id  # 存储学生 ID 在会话中
+            return redirect(url_for('student.student_home', username=user[2], stu_id=student_id))
         else:
             return render_template('student_login.html', error='Invalid username or password')
     return render_template('student_login.html')
 
+@student_bp.route('/student_logout', methods=['POST'])
+@student_login_required
+def student_logout():
+    session.pop('student_id', None)
+    return redirect(url_for('student.student_login'))
+
 @student_bp.route('/student_home')
+@student_login_required
 def student_home():
     username = request.args.get('username')
     stu_id = request.args.get('stu_id')
@@ -39,6 +57,7 @@ def student_home():
     return render_template('student_home.html', stu_id = stu_id, username=username, stu_evalution=stu_evalution, stu_class=stu_class)
 
 @student_bp.route('/submit_emoji', methods=['POST'])
+@student_login_required
 def submit_emoji():
     data = request.get_json()
     # print(99)
@@ -54,10 +73,12 @@ def submit_emoji():
     else:
         return jsonify({'message': '提交失败'}), 500
     
-@student_bp.route('/delete_evalution', methods=['POST'])
+@student_bp.route('/student_delete_evalution', methods=['POST'])
+@student_login_required
 def delete_evalution():
     data = request.get_json()
     evalution_id = data['evalution_id']
+    print("evalution_id:", evalution_id)
     success = delete_student_evalution(evalution_id)
     if success:
         return jsonify({'message': '评价已删除'}), 200
@@ -72,8 +93,8 @@ def register():
         student_name = request.form['student_name']
         student_id = request.form['student_id']
         nickname = request.form['nickname']
-        password = request.form['password']
-        new_password = request.form['new_password']
+        password = request.form['verify_password']
+        new_password = request.form['login_password']
         can_register, message = can_register_student(student_id, student_name, password)
         print(can_register)
         if can_register:
@@ -93,6 +114,46 @@ def register():
             else:
                 flash(message)
     return render_template('register.html')
+
+@student_bp.route('/student_change_password', methods=['POST'])
+@student_login_required
+def student_change_password():
+    student_id = session.get('student_id')
+    if not student_id:
+        flash('请先登录')
+        return redirect(url_for('student.student_login'))
+    print('111')
+    data = request.get_json()
+    old_password = data.get('old_password')
+    new_password = data.get('new_password')
+
+    # 验证旧密码
+    user = validate_student_login(student_id, old_password)
+    if not user:
+        return jsonify({'message': '旧密码错误'}), 400
+
+    # 更新新密码
+    success = update_student_password(student_id, new_password)
+    if success:
+        return jsonify({'message': '密码修改成功'}), 200
+    else:
+        return jsonify({'message': '密码修改失败'}), 500
+
+def update_student_password(student_id, new_password):
+    conn = get_db_connection()
+    if conn is None:
+        return False
+    try:
+        cursor = conn.cursor()
+        sql = "UPDATE USER_STUDENT SET STUDENT_PASSWORD = %s WHERE USER_STU_ID = %s"
+        cursor.execute(sql, (new_password, student_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except pymysql.MySQLError as e:
+        print(f"Error executing query: {e}")
+        return False
 
 # def get_db_connection():
 #     try:
@@ -234,7 +295,7 @@ def register_student(student_id, student_name, nickname, password):
     try:
         cursor = conn.cursor()
         # 插入新用户信息到USER_STUDENT表中
-        sql_insert = "INSERT INTO USER_STUDENT (STUDENT_ID, STUDENT_NAME, STUDENT_NICKNAME, STUDENT_PASSWORD) VALUES (%s, %s, %s, %s)"
+        sql_insert = "INSERT INTO USER_STUDENT (USER_STU_ID, STUDENT_NAME, STUDENT_NICKNAME, STUDENT_PASSWORD) VALUES (%s, %s, %s, %s)"
         cursor.execute(sql_insert, (student_id, student_name, nickname, password))
         # 更新STU_INFO表中的FLAG字段
         sql_update = "UPDATE STU_INFO SET FLAG = 1 WHERE STU_ID = %s"
@@ -249,3 +310,4 @@ def register_student(student_id, student_name, nickname, password):
 
 def student_init_routes(app):
     app.register_blueprint(student_bp)
+    return app

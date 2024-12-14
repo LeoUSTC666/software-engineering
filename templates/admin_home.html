@@ -111,7 +111,7 @@
 
         function deleteEvalution(evalutionId) {
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/delete_evalution', true);
+            xhr.open('POST', '/admin_delete_evalution', true);
             xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4) {
@@ -168,6 +168,22 @@
     <div class="image-container">
         <img src="admin_dashboard.jpg" alt="管理员主页图片">
     </div>
+    <form action="{{ url_for('admin.admin_logout') }}" method="post" style="display: inline;">
+        <button type="submit">登出</button>
+    </form>
+    <form action="{{ url_for('admin.export_evalution') }}" method="get">
+        <button type="submit">导出评价数据</button>
+    </form>
+    <form action="{{ url_for('admin.filter_evalution') }}" method="get">
+        <label for="start_date">开始日期:</label>
+        <input type="date" id="start_date" name="start_date">
+        <label for="end_date">结束日期:</label>
+        <input type="date" id="end_date" name="end_date">
+        <button type="submit">筛选</button>
+    </form>
+    <form action="{{ url_for('admin.reset_filter') }}" method="get">
+        <button type="submit">还原</button>
+    </form>
     {% if charts_data %}
         <h2>所有教师的课程评价:</h2>
         {% for teacher_name, classes in charts_data.items() %}
