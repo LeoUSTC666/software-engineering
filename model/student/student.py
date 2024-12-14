@@ -8,6 +8,9 @@ from ..conn import get_db_connection
 student_bp = Blueprint('student', __name__)
 import pymysql
 import secrets
+import os
+from functools import wraps
+
 
 @student_bp.route('/student_login', methods=['GET', 'POST'])
 def student_login():
@@ -16,14 +19,15 @@ def student_login():
         password = request.form['password']
         user = validate_student_login(student_id, password)
         if user:
+            session['username'] = user[1]  # 存储用户名在会话中
             session['student_id'] = student_id  # 存储学生 ID 在会话中
             return redirect(url_for('student.student_home', username=user[2], stu_id=student_id))
         else:
             return render_template('student_login.html', error='Invalid username or password')
     return render_template('student_login.html')
 
-@student_bp.route('/logout', methods=['POST'])
-def logout():
+@student_bp.route('/student_logout', methods=['POST'])
+def student_logout():
     session.pop('student_id', None)
     return redirect(url_for('student.student_login'))
 
@@ -61,6 +65,7 @@ def submit_emoji():
 def delete_evalution():
     data = request.get_json()
     evalution_id = data['evalution_id']
+    print("evalution_id:", evalution_id)
     success = delete_student_evalution(evalution_id)
     if success:
         return jsonify({'message': '评价已删除'}), 200
@@ -97,30 +102,28 @@ def register():
                 flash(message)
     return render_template('register.html')
 
-@student_bp.route('/change_password', methods=['POST'])
-def change_password():
+@student_bp.route('/student_change_password', methods=['POST'])
+def student_change_password():
     student_id = session.get('student_id')
     if not student_id:
         flash('请先登录')
         return redirect(url_for('student.student_login'))
-
-    old_password = request.form['old_password']
-    new_password = request.form['new_password']
+    print('111')
+    data = request.get_json()
+    old_password = data.get('old_password')
+    new_password = data.get('new_password')
 
     # 验证旧密码
     user = validate_student_login(student_id, old_password)
     if not user:
-        flash('旧密码错误')
-        return redirect(url_for('student.student_home', username=user[2], stu_id=student_id))
+        return jsonify({'message': '旧密码错误'}), 400
 
     # 更新新密码
     success = update_student_password(student_id, new_password)
     if success:
-        flash('密码修改成功')
+        return jsonify({'message': '密码修改成功'}), 200
     else:
-        flash('密码修改失败')
-
-    return redirect(url_for('student.student_home', username=user[2], stu_id=student_id))
+        return jsonify({'message': '密码修改失败'}), 500
 
 def update_student_password(student_id, new_password):
     conn = get_db_connection()
@@ -293,3 +296,4 @@ def register_student(student_id, student_name, nickname, password):
 
 def student_init_routes(app):
     app.register_blueprint(student_bp)
+    return app

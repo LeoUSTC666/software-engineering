@@ -18,13 +18,14 @@ def teacher_login():
         user = validate_teacher_login(teacher_id, password)
         if user:
             session['teacher_id'] = teacher_id  # 存储教师 ID 在会话中
+            session['username'] = user[1]  # 存储用户名在会话中
             return redirect(url_for('teacher.teacher_home', username=user[1], teacher_id=teacher_id))
         else:
             return render_template('teacher_login.html', error='Invalid userid or password')
     return render_template('teacher_login.html')
 
-@teacher_bp.route('/logout', methods=['POST'])
-def logout():
+@teacher_bp.route('/teacher_logout', methods=['POST'])
+def teacher_logout():
     session.pop('teacher_id', None)
     return redirect(url_for('teacher.teacher_login'))
 
@@ -75,30 +76,28 @@ def upload():
     save_to_db(teacher_id, filename)
     return redirect(url_for('teacher.teacher_home', teacher_id=teacher_id, username=username))
 
-@teacher_bp.route('/change_password', methods=['POST'])
-def change_password():
+@teacher_bp.route('/teacher_change_password', methods=['POST'])
+def teacher_change_password():
     teacher_id = session.get('teacher_id')
     if not teacher_id:
         flash('请先登录')
         return redirect(url_for('teacher.teacher_login'))
 
-    old_password = request.form['old_password']
-    new_password = request.form['new_password']
+    data = request.get_json()
+    old_password = data.get('old_password')
+    new_password = data.get('new_password')
 
     # 验证旧密码
     user = validate_teacher_login(teacher_id, old_password)
     if not user:
-        flash('旧密码错误')
-        return redirect(url_for('teacher.teacher_home', username=user[1], teacher_id=teacher_id))
+        return jsonify({'message': '旧密码错误'}), 400
 
     # 更新新密码
     success = update_teacher_password(teacher_id, new_password)
     if success:
-        flash('密码修改成功')
+        return jsonify({'message': '密码修改成功'}), 200
     else:
-        flash('密码修改失败')
-
-    return redirect(url_for('teacher.teacher_home', username=user[1], teacher_id=teacher_id))
+        return jsonify({'message': '密码修改失败'}), 500
 
 def update_teacher_password(teacher_id, new_password):
     conn = get_db_connection()
@@ -169,7 +168,7 @@ def search_teacher_class(teacher_id):
         print(f"Error executing query: {e}")
         return None
     
-def  validate_teacher_login(teacher_id, password):
+def validate_teacher_login(teacher_id, password):
     conn = get_db_connection()
     if conn is None:
         return None
@@ -181,8 +180,10 @@ def  validate_teacher_login(teacher_id, password):
         cursor.close()
         conn.close()
         if user:
+            print('Login successful')
             return user
         else:
+            print('Invalid userid or password')
             return None
     except pymysql.MySQLError as e:
         print(f"Error executing query: {e}")
@@ -229,3 +230,4 @@ def get_user_image(TEACHER_ID):
 
 def teacher_init_routes(app):
     app.register_blueprint(teacher_bp)
+    return app

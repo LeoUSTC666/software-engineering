@@ -56,9 +56,36 @@
             .login-container input[type="submit"]:hover {
                 background-color: #45a049;
             }
+            .form-group {
+                margin-bottom: 15px;
+            }
+            .form-group label {
+                display: block;
+                font-size: 14px;
+                margin-bottom: 5px;
+            }
+            .form-group input {
+                width: calc(100% - 20px);
+                padding: 10px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+            }
             .error-message {
                 color: red;
                 font-size: 14px;
+                margin-bottom: 10px;
+            }
+            button {
+                width: calc(100% - 20px);
+                padding: 10px;
+                background-color: #4CAF50;
+                color: white;
+                border-radius: 5px;
+                border: none;
+                cursor: pointer;
+            }
+            button:hover {
+                background-color: #45a049;
             }
         </style>
     </head>
@@ -71,17 +98,22 @@
             <h1>管理员登录</h1>
     
             <!-- 登录表单 -->
-            <form method="post">
-                <label for="admin_id">请输入帐号和密码:</label>
+            <form method="POST" action="/admin_login" onsubmit="return validateForm()">
+                {% if error %}
+                    <p class="error-message">{{ error }}</p>
+                {% endif %}
                 
-                <!-- 帐号输入框 -->
-                <input type="number" id="admin_id" name="admin_id" placeholder="请输入帐号" required>
+                <div class="form-group">
+                    <label for="admin_id">学号:</label>
+                    <input type="text" id="admin_id" name="admin_id" placeholder="请输入工号">
+                </div>
     
-                <!-- 密码输入框 -->
-                <input type="number" id="password" name="password" placeholder="请输入密码" required>
+                <div class="form-group">
+                    <label for="password">密码:</label>
+                    <input type="password" id="password" name="password" placeholder="请输入密码">
+                </div>
     
-                <!-- 提交按钮 -->
-                <input type="submit" value="登录">
+                <button type="submit">登录</button>
             </form>
     
             <!-- 错误提示信息 -->

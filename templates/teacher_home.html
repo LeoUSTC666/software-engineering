@@ -40,22 +40,39 @@
                 border-radius: 10px;
                 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             }
-            .course-section {
-                margin-bottom: 30px;
+            h2 {
+                color: #333;
             }
-            .course-section h3 {
-                color: #4CAF50;
-            }
-            .course-section ul {
+            ul {
                 list-style-type: none;
                 padding-left: 0;
             }
-            .course-section li {
+            li {
+                margin-bottom: 15px;
                 padding: 10px;
                 border-bottom: 1px solid #ddd;
             }
-            .course-section li:last-child {
+            li:last-child {
                 border-bottom: none;
+            }
+            button {
+                margin-right: 5px;
+                padding: 5px 10px;
+                border-radius: 3px;
+                border: none;
+                cursor: pointer;
+            }
+            .delete-button {
+                background-color: #ff4d4d;
+                color: white;
+            }
+            .submit-button {
+                background-color: #4CAF50;
+                color: white;
+            }
+            .cancel-button {
+                background-color: #f0ad4e;
+                color: white;
             }
             footer {
                 background-color: #333;
@@ -66,14 +83,40 @@
             footer p {
                 margin: 0;
             }
-            .image-container img {
-                width: 100%;
-                max-width: 600px;
-                height: auto;
-                border-radius: 10px;
-            }
             .hidden {
                 display: none;
+            }
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 1;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgb(0,0,0);
+                background-color: rgba(0,0,0,0.4);
+                padding-top: 60px;
+            }
+            .modal-content {
+                background-color: #fefefe;
+                margin: 5% auto;
+                padding: 20px;
+                border: 1px solid #888;
+                width: 80%;
+            }
+            .close {
+                color: #aaa;
+                float: right;
+                font-size: 28px;
+                font-weight: bold;
+            }
+            .close:hover,
+            .close:focus {
+                color: black;
+                text-decoration: none;
+                cursor: pointer;
             }
         </style>
         <style>
@@ -83,10 +126,62 @@
         </style>
         <script>
             // Decode emoji codes to display actual emojis
+            function showChangePasswordModal() {
+                document.getElementById('change-password-modal').style.display = 'block';
+            }
+
+            function hideChangePasswordModal() {
+                document.getElementById('change-password-modal').style.display = 'none';
+            }
+            function validatePasswords(oldPassword, newPassword) {
+                if (!oldPassword || !newPassword) {
+                    alert('旧密码和新密码不能为空');
+                    return false;
+                }
+                return true;
+            }
+            function submitChangePassword() {
+                const oldPassword = document.getElementById('old_password').value;
+                const newPassword = document.getElementById('new_password').value;
+                if (!validatePasswords(oldPassword, newPassword)) {
+                    return;
+                }
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/teacher_change_password', true);
+                xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            alert('密码修改成功');
+                            hideChangePasswordModal();
+                            document.getElementById('old_password').value = '';
+                            document.getElementById('new_password').value = '';
+                        } else {
+                            const response = JSON.parse(xhr.responseText);
+                            alert(response.message);
+                        }
+                    }
+                };
+            
+                xhr.send(JSON.stringify({
+                    old_password: oldPassword,
+                    new_password: newPassword
+                }));
+            }
+
+            window.onclick = function(event) {
+                const modal = document.getElementById('change-password-modal');
+                if (event.target == modal) {
+                    hideChangePasswordModal();
+                }
+            }
+
+            // Decode emoji codes to display actual emojis
             function decodeEmoji(emojiCode) {
                 return String.fromCodePoint(parseInt(emojiCode.replace('U+', '0x')));
             }
-    
+
             // Replace emoji codes with actual emojis on page load
             function displayEmojis() {
                 const emojiElements = document.querySelectorAll('.emoji-code');
@@ -95,24 +190,9 @@
                     element.textContent = decodeEmoji(emojiCode);
                 });
             }
-            // Show change password form
-            function showChangePasswordForm() {
-                document.getElementById('change-password-form').classList.remove('hidden');
-                document.getElementById('change-password-button').classList.add('hidden');
-            }
 
-            // Hide change password form
-            function hideChangePasswordForm() {
-                document.getElementById('change-password-form').classList.add('hidden');
-                document.getElementById('change-password-button').classList.remove('hidden');
-            }
-            // Execute displayEmojis function on page load
             window.onload = function() {
                 displayEmojis();
-
-                // Add event listeners to show/hide change password form
-                document.getElementById('change-password-button').addEventListener('click', showChangePasswordForm);
-                document.getElementById('cancel-button').addEventListener('click', hideChangePasswordForm);
             };
         </script>
     </head>
@@ -133,21 +213,20 @@
             <input type="file" id="file-input" name="image" onchange="showSubmitButton()">
             <button type="submit" id="submit-button">上传</button>
         </form>
-        <button id="change-password-button">修改密码</button>
-        <div id="change-password-form" class = "hidden">
-            <h2>修改密码</h2>
-            <form action="{{url_for('teacher.change_password')}}" method="post">
-                <input type="hidden" name="teacher_id" value="{{teacher_id}}">
-                <input type="hidden" name="username" value="{{username}}">
+        <button onclick="showChangePasswordModal()">修改密码</button>
+        <div id="change-password-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="hideChangePasswordModal()">&times;</span>
+                <h2>修改密码</h2>
                 <label for="old_password">旧密码:</label>
                 <input type="password" id="old_password" name="old_password" required>
                 <label for="new_password">新密码:</label>
                 <input type="password" id="new_password" name="new_password" required>
-                <button type="submit">提交</button>
-                <button type="button" id="cancel-button">取消</button>
-            </form>
+                <button onclick="submitChangePassword()">提交</button>
+                <button onclick="hideChangePasswordModal()">取消</button>
+            </div>
         </div>
-        <form action="{{ url_for('teacher.logout') }}" method="post" style="display: inline;">
+        <form action="{{ url_for('teacher.teacher_logout') }}" method="post" style="display: inline;">
             <button type="submit">登出</button>
         </form>
         {% if teacher_evalution %}
