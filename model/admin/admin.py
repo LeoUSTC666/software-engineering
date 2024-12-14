@@ -7,12 +7,26 @@ from ..conn import get_db_connection
 import pandas as pd
 from io import BytesIO
 from flask import send_file
+from functools import wraps
+from flask import g
+from flask import Flask, render_template, redirect, url_for
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+
 
 admin_bp = Blueprint('admin', __name__)
 import pymysql
 import secrets
 
+#@admin_bp.before_request
+#def before_request():
+#    url = request.path
+#    if url == '/admin_login' or url == '/logout':
+#        pass
+#    else:
+#        if 'admin_id' not in session:
+#            return redirect(url_for('admin.admin_login'))
 
+        
 
 @admin_bp.route('/admin_login', methods=['GET', 'POST'])
 def admin_login():
@@ -29,7 +43,7 @@ def admin_login():
 
 @admin_bp.route('/logout', methods=['POST'])
 def logout():
-    session.clear()
+    session.pop('admin_id', None)
     return redirect(url_for('admin.admin_login'))
 
 @admin_bp.route('/admin_home')
@@ -110,6 +124,23 @@ def filter_evalution():
 
     return render_template('admin_home.html', charts_data=charts_data, student_evalution=filtered_student_evalution)
     
+@admin_bp.route('/reset_filter', methods=['GET'])
+def reset_filter():
+    raw_teacher_evalution = search_all_teacher_evalution()
+    raw_student_evalution = search_all_student_evalution()
+
+    # 处理数据，将其按教师分组
+    charts_data = {}
+    for eval in raw_teacher_evalution:
+        teacher_name, class_name, emoji_code, emoji_count = eval
+        if teacher_name not in charts_data:
+            charts_data[teacher_name] = {}
+        if class_name not in charts_data[teacher_name]:
+            charts_data[teacher_name][class_name] = []
+        charts_data[teacher_name][class_name].append({'emoji_code': emoji_code, 'count': emoji_count})
+
+    return render_template('admin_home.html', charts_data=charts_data, student_evalution=raw_student_evalution)
+
 def create_admin_account(admin_id, admin_name, admin_password):
     conn = get_db_connection()
     if conn is None:
@@ -275,22 +306,12 @@ def search_student_evalution_by_date(start_date, end_date):
         print(f"Error executing query: {e}")
         return None
     
-@admin_bp.route('/reset_filter', methods=['GET'])
-def reset_filter():
-    raw_teacher_evalution = search_all_teacher_evalution()
-    raw_student_evalution = search_all_student_evalution()
 
-    # 处理数据，将其按教师分组
-    charts_data = {}
-    for eval in raw_teacher_evalution:
-        teacher_name, class_name, emoji_code, emoji_count = eval
-        if teacher_name not in charts_data:
-            charts_data[teacher_name] = {}
-        if class_name not in charts_data[teacher_name]:
-            charts_data[teacher_name][class_name] = []
-        charts_data[teacher_name][class_name].append({'emoji_code': emoji_code, 'count': emoji_count})
 
-    return render_template('admin_home.html', charts_data=charts_data, student_evalution=raw_student_evalution)
+
+
+
+
 def admin_init_routes(app):
     app.register_blueprint(admin_bp)
     return app

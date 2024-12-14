@@ -22,6 +22,8 @@ admin_init_routes(app)
 teacher_init_routes(app)
 student_init_routes(app)
 
+app.config['SECRET_KEY'] = os.urandom(24)
+
 # conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='leo520', db='lab2', charset='utf8')
 
 class User:
