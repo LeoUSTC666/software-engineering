@@ -10,13 +10,14 @@ import pymysql
 import secrets
 import os
 
-@teacher_bp.route('/teacher_login',methods = ['GET', 'POST'])
+@teacher_bp.route('/teacher_login', methods=['GET', 'POST'])
 def teacher_login():
     if request.method == 'POST':
         teacher_id = request.form['teacher_id']
         password = request.form['password']
         user = validate_teacher_login(teacher_id, password)
         if user:
+            session['teacher_id'] = teacher_id  # 存储教师 ID 在会话中
             return redirect(url_for('teacher.teacher_home', username=user[1], teacher_id=teacher_id))
         else:
             return render_template('teacher_login.html', error='Invalid userid or password')
@@ -68,6 +69,46 @@ def upload():
     save_to_db(teacher_id, filename)
     return redirect(url_for('teacher.teacher_home', teacher_id=teacher_id, username=username))
 
+@teacher_bp.route('/change_password', methods=['POST'])
+def change_password():
+    teacher_id = session.get('teacher_id')
+    if not teacher_id:
+        flash('请先登录')
+        return redirect(url_for('teacher.teacher_login'))
+
+    old_password = request.form['old_password']
+    new_password = request.form['new_password']
+
+    # 验证旧密码
+    user = validate_teacher_login(teacher_id, old_password)
+    if not user:
+        flash('旧密码错误')
+        return redirect(url_for('teacher.teacher_home', username=user[1], teacher_id=teacher_id))
+
+    # 更新新密码
+    success = update_teacher_password(teacher_id, new_password)
+    if success:
+        flash('密码修改成功')
+    else:
+        flash('密码修改失败')
+
+    return redirect(url_for('teacher.teacher_home', username=user[1], teacher_id=teacher_id))
+
+def update_teacher_password(teacher_id, new_password):
+    conn = get_db_connection()
+    if conn is None:
+        return False
+    try:
+        cursor = conn.cursor()
+        sql = "UPDATE USER_TEACHER SET TEACHER_PASSWORD = %s WHERE TEACHER_ID = %s"
+        cursor.execute(sql, (new_password, teacher_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except pymysql.MySQLError as e:
+        print(f"Error executing query: {e}")
+        return False
 
 # def get_db_connection():
 #     try:
