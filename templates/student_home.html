@@ -220,6 +220,9 @@
         <h1>欢迎, {{ username }}!</h1>
     </header>
     <div class="container">
+        <form action="{{ url_for('student.logout') }}" method="post" style="display: inline;">
+            <button type="submit">登出</button>
+        </form>
         <button id="change-password-button">修改密码</button>
         <div id="change-password-form" class="hidden">
             <h2>修改密码</h2>

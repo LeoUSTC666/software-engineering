@@ -22,6 +22,11 @@ def student_login():
             return render_template('student_login.html', error='Invalid username or password')
     return render_template('student_login.html')
 
+@student_bp.route('/logout', methods=['POST'])
+def logout():
+    session.pop('student_id', None)
+    return redirect(url_for('student.student_login'))
+
 @student_bp.route('/student_home')
 def student_home():
     username = request.args.get('username')
