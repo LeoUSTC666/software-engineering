@@ -72,6 +72,9 @@
                 height: auto;
                 border-radius: 10px;
             }
+            .hidden {
+                display: none;
+            }
         </style>
         <style>
             #submit-button {
@@ -92,9 +95,25 @@
                     element.textContent = decodeEmoji(emojiCode);
                 });
             }
-    
+            // Show change password form
+            function showChangePasswordForm() {
+                document.getElementById('change-password-form').classList.remove('hidden');
+                document.getElementById('change-password-button').classList.add('hidden');
+            }
+
+            // Hide change password form
+            function hideChangePasswordForm() {
+                document.getElementById('change-password-form').classList.add('hidden');
+                document.getElementById('change-password-button').classList.remove('hidden');
+            }
             // Execute displayEmojis function on page load
-            window.onload = displayEmojis;
+            window.onload = function() {
+                displayEmojis();
+
+                // Add event listeners to show/hide change password form
+                document.getElementById('change-password-button').addEventListener('click', showChangePasswordForm);
+                document.getElementById('cancel-button').addEventListener('click', hideChangePasswordForm);
+            };
         </script>
     </head>
 <body>
@@ -106,14 +125,28 @@
     <div class="container">
         <!-- 添加一张图片作为视觉吸引 -->
         <h2>教师照片</h2>
-    <img src="{{image_path}}" alt="个人头像" width="200" height="200">
-    <!--此处加入一个跳转至上传图片的按钮 -->
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="hidden" name="teacher_id" value="{{teacher_id}}">
-        <input type="hidden" name="username" value="{{username}}">
-        <input type="file" id="file-input" name="image" onchange="showSubmitButton()">
-        <button type="submit" id="submit-button">上传</button>
-    </form>
+        <img src="{{image_path}}" alt="个人头像" width="200" height="200">
+        <!--此处加入一个跳转至上传图片的按钮 -->
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="teacher_id" value="{{teacher_id}}">
+            <input type="hidden" name="username" value="{{username}}">
+            <input type="file" id="file-input" name="image" onchange="showSubmitButton()">
+            <button type="submit" id="submit-button">上传</button>
+        </form>
+        <button id="change-password-button">修改密码</button>
+        <div id="change-password-form" class = "hidden">
+            <h2>修改密码</h2>
+            <form action="{{url_for('teacher.change_password')}}" method="post">
+                <input type="hidden" name="teacher_id" value="{{teacher_id}}">
+                <input type="hidden" name="username" value="{{username}}">
+                <label for="old_password">旧密码:</label>
+                <input type="password" id="old_password" name="old_password" required>
+                <label for="new_password">新密码:</label>
+                <input type="password" id="new_password" name="new_password" required>
+                <button type="submit">提交</button>
+                <button type="button" id="cancel-button">取消</button>
+            </form>
+        </div>
         {% if teacher_evalution %}
             <h2>你的课程评价:</h2>
             {%for eval in teacher_evalution%}

@@ -14,11 +14,9 @@ def student_login():
     if request.method == 'POST':
         student_id = request.form['student_id']
         password = request.form['password']
-        # print("id: ", student_id)
-        # print("password: ", password)
         user = validate_student_login(student_id, password)
-        print("user: ", user)
         if user:
+            session['student_id'] = student_id  # 存储学生 ID 在会话中
             return redirect(url_for('student.student_home', username=user[2], stu_id=student_id))
         else:
             return render_template('student_login.html', error='Invalid username or password')
@@ -93,6 +91,47 @@ def register():
             else:
                 flash(message)
     return render_template('register.html')
+
+@student_bp.route('/change_password', methods=['POST'])
+def change_password():
+    student_id = session.get('student_id')
+    if not student_id:
+        flash('请先登录')
+        return redirect(url_for('student.student_login'))
+
+    old_password = request.form['old_password']
+    new_password = request.form['new_password']
+
+    # 验证旧密码
+    user = validate_student_login(student_id, old_password)
+    if not user:
+        flash('旧密码错误')
+        return redirect(url_for('student.student_home', username=user[2], stu_id=student_id))
+
+    # 更新新密码
+    success = update_student_password(student_id, new_password)
+    if success:
+        flash('密码修改成功')
+    else:
+        flash('密码修改失败')
+
+    return redirect(url_for('student.student_home', username=user[2], stu_id=student_id))
+
+def update_student_password(student_id, new_password):
+    conn = get_db_connection()
+    if conn is None:
+        return False
+    try:
+        cursor = conn.cursor()
+        sql = "UPDATE USER_STUDENT SET STUDENT_PASSWORD = %s WHERE USER_STU_ID = %s"
+        cursor.execute(sql, (new_password, student_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except pymysql.MySQLError as e:
+        print(f"Error executing query: {e}")
+        return False
 
 # def get_db_connection():
 #     try:
