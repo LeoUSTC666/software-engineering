@@ -26,7 +26,13 @@ import secrets
 #        if 'admin_id' not in session:
 #            return redirect(url_for('admin.admin_login'))
 
-        
+def admin_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'admin_id' not in session:
+            return redirect(url_for('admin.admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @admin_bp.route('/admin_login', methods=['GET', 'POST'])
 def admin_login():
@@ -41,12 +47,14 @@ def admin_login():
             return render_template('admin_login.html', error='Invalid admin_id or password')
     return render_template('admin_login.html')
 
-@admin_bp.route('/logout', methods=['POST'])
-def logout():
+@admin_bp.route('/admin_logout', methods=['POST'])
+@admin_login_required
+def admin_logout():
     session.pop('admin_id', None)
     return redirect(url_for('admin.admin_login'))
 
 @admin_bp.route('/admin_home')
+@admin_login_required
 def admin_home():
     raw_teacher_evalution = search_all_teacher_evalution()
     raw_student_evalution = search_all_student_evalution()
@@ -62,8 +70,9 @@ def admin_home():
 
     return render_template('admin_home.html', charts_data=charts_data,student_evalution=raw_student_evalution)
 
-@admin_bp.route('/delete_evalution', methods=['POST'])
-def delete_evalution():
+@admin_bp.route('/admin_delete_evalution', methods=['POST'])
+@admin_login_required
+def admin_delete_evalution():
     data = request.get_json()
     evalution_id = data['evalution_id']
     success = delete_student_evalution(evalution_id)
@@ -80,6 +89,7 @@ def delete_evalution():
 #         print(f"Error connecting to the database: {e}")
 #         return None
 @admin_bp.route('/export_evalution')
+@admin_login_required
 def export_evalution():
     # 获取评价数据
     raw_teacher_evalution = search_all_teacher_evalution()
@@ -101,6 +111,7 @@ def export_evalution():
     return send_file(output, download_name='evalution_data.xlsx', as_attachment=True)
 
 @admin_bp.route('/filter_evalution', methods=['GET'])
+@admin_login_required
 def filter_evalution():
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
@@ -125,6 +136,7 @@ def filter_evalution():
     return render_template('admin_home.html', charts_data=charts_data, student_evalution=filtered_student_evalution)
     
 @admin_bp.route('/reset_filter', methods=['GET'])
+@admin_login_required
 def reset_filter():
     raw_teacher_evalution = search_all_teacher_evalution()
     raw_student_evalution = search_all_student_evalution()

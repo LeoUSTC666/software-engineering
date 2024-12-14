@@ -111,7 +111,7 @@
 
         function deleteEvalution(evalutionId) {
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/delete_evalution', true);
+            xhr.open('POST', '/admin_delete_evalution', true);
             xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4) {
@@ -168,7 +168,7 @@
     <div class="image-container">
         <img src="admin_dashboard.jpg" alt="管理员主页图片">
     </div>
-    <form action="{{ url_for('admin.logout') }}" method="post" style="display: inline;">
+    <form action="{{ url_for('admin.admin_logout') }}" method="post" style="display: inline;">
         <button type="submit">登出</button>
     </form>
     <form action="{{ url_for('admin.export_evalution') }}" method="get">
